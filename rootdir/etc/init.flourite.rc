@@ -1,0 +1,50 @@
+#
+# SPDX-FileCopyrightText: 2026 The LineageOS Project
+# SPDX-License-Identifier: Apache-2.0
+#
+
+# Device-specific additions for the source-built Lineage services. Qualcomm
+# and Xiaomi platform setup remains in the stock-derived init.qcom.rc and
+# init.target.rc files.
+
+on boot
+    # Lineage's sensor notifier watches these nodes to bridge Xiaomi's
+    # non-UI and AOD sensors into the display/touch drivers.
+    chown system system /dev/mi_display/disp_feature
+    chmod 0660 /dev/mi_display/disp_feature
+    chown system system /dev/xiaomi-touch
+    chmod 0660 /dev/xiaomi-touch
+    chown system system /sys/class/touch/touch_dev/fod_longpress_gesture_enabled
+    chmod 0660 /sys/class/touch/touch_dev/fod_longpress_gesture_enabled
+    chown system system /sys/class/touch/touch_dev/gesture_single_tap_enabled
+    chmod 0660 /sys/class/touch/touch_dev/gesture_single_tap_enabled
+    chown system system /sys/class/touch/touch_dev/gesture_double_tap_enabled
+    chmod 0660 /sys/class/touch/touch_dev/gesture_double_tap_enabled
+
+    # Lineage Health charging-control access.
+    chown system system /sys/class/power_supply/battery/charge_control_limit
+
+# Keep the source audio HAL connected to the ultrasound proximity HAL.
+service vendor.audio-hal /vendor/bin/hw/android.hardware.audio.service
+    override
+    class hal
+    user audioserver
+    group audio camera drmrpc inet media mediadrm net_bt net_bt_admin net_bw_acct wakelock context_hub system
+    capabilities BLOCK_SUSPEND SYS_NICE
+    rlimit rtprio 10 10
+    ioprio rt 4
+    task_profiles ProcessCapacityHigh HighPerformance
+    socket audio_holder_socket_0 seqpacket 0666 system system
+    socket audio_us_socket_0 seqpacket 0666 system system
+    onrestart restart audioserver
+
+# The second endpoint is consumed by sensors.ultrasoundproximity.so.
+service vendor.sensors-hal-multihal /vendor/bin/hw/android.hardware.sensors-service.xiaomi-multihal
+    override
+    class hal
+    user system
+    group system wakelock context_hub input uhid
+    task_profiles ServiceCapacityLow
+    socket audio_us_socket_1 seqpacket 0666 system system
+    capabilities BLOCK_SUSPEND
+    rlimit rtprio 10 10
