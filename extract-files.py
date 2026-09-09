@@ -143,6 +143,7 @@ blob_fixups: blob_fixups_user_type = {
         .add_needed('libinput_shim.so')
         .remove_needed('android.hidl.base@1.0.so'),
     'system_ext/lib64/libwfdservice.so': blob_fixup()
+        .add_needed('libaudiobase.so')
         .replace_needed(
             'android.media.audio.common.types-V4-cpp.so',
             'android.media.audio.common.types-V5-cpp.so'
