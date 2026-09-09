@@ -229,7 +229,16 @@ PRODUCT_PACKAGES += \
 
 PRODUCT_COPY_FILES += \
     $(LOCAL_PATH)/rootdir/etc/init.recovery.qcom.rc:$(TARGET_COPY_OUT_RECOVERY)/root/init.recovery.qcom.rc \
+    $(LOCAL_PATH)/rootdir/etc/charger_fw_fstab.qti:$(TARGET_COPY_OUT_RECOVERY)/root/vendor/etc/charger_fstab.qti \
     $(LOCAL_PATH)/rootdir/etc/fstab.qcom:$(TARGET_COPY_OUT_VENDOR_RAMDISK)/first_stage_ramdisk/fstab.qcom
+
+PRODUCT_PACKAGES += \
+    flourite_recovery_adsp_loader_dlkm \
+    flourite_recovery_gpr_dlkm \
+    flourite_recovery_q6_notifier_dlkm \
+    flourite_recovery_q6_pdr_dlkm \
+    flourite_recovery_snd_event_dlkm \
+    flourite_recovery_spf_core_dlkm
 
 # Keymint
 PRODUCT_PACKAGES += \
