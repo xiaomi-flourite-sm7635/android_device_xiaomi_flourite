@@ -118,6 +118,8 @@ BOARD_KERNEL_CMDLINE := \
 
 BOARD_BOOTCONFIG := \
     androidboot.hardware=qcom \
+    androidboot.bootdevice=1d84000.ufshc \
+    androidboot.boot_devices=soc/1d84000.ufshc \
     androidboot.memcg=1 \
     androidboot.usbcontroller=a600000.dwc3 \
     androidboot.load_modules_parallel=true \
