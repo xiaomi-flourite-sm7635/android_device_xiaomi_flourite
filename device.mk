@@ -221,7 +221,6 @@ PRODUCT_PACKAGES += \
     init.flourite.rc \
     init.qcom.rc \
     init.qti.media.rc \
-    init.recovery.qcom.rc \
     init.target.rc
 
 PRODUCT_PACKAGES += \
@@ -229,6 +228,7 @@ PRODUCT_PACKAGES += \
     ueventd.qcom.rc
 
 PRODUCT_COPY_FILES += \
+    $(LOCAL_PATH)/rootdir/etc/init.recovery.qcom.rc:$(TARGET_COPY_OUT_RECOVERY)/root/init.recovery.qcom.rc \
     $(LOCAL_PATH)/rootdir/etc/fstab.qcom:$(TARGET_COPY_OUT_VENDOR_RAMDISK)/first_stage_ramdisk/fstab.qcom
 
 # Keymint
