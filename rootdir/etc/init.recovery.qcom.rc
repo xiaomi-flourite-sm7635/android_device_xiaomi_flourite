@@ -46,9 +46,6 @@ on property:ro.boot.usbcontroller=*
 on fs
     wait /dev/block/platform/soc/${ro.boot.bootdevice:-1d84000.ufshc}
     symlink /dev/block/platform/soc/${ro.boot.bootdevice:-1d84000.ufshc} /dev/block/bootdevice
-    write /proc/sys/kernel/firmware_config/force_sysfs_fallback 1
-    mkdir /vendor/firmware_mnt
-    mkdir /vendor/firmware
     mount_all /vendor/etc/charger_fstab.qti --early
     mount none /vendor/firmware_mnt/image /vendor/firmware bind rec
     wait /sys/kernel/boot_adsp/boot

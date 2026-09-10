@@ -230,6 +230,8 @@ PRODUCT_PACKAGES += \
 PRODUCT_COPY_FILES += \
     $(LOCAL_PATH)/rootdir/etc/init.recovery.qcom.rc:$(TARGET_COPY_OUT_RECOVERY)/root/init.recovery.qcom.rc \
     $(LOCAL_PATH)/rootdir/etc/charger_fw_fstab.qti:$(TARGET_COPY_OUT_RECOVERY)/root/vendor/etc/charger_fstab.qti \
+    $(LOCAL_PATH)/rootdir/etc/recovery_mountpoint:$(TARGET_COPY_OUT_RECOVERY)/root/vendor/firmware/.mountpoint \
+    $(LOCAL_PATH)/rootdir/etc/recovery_mountpoint:$(TARGET_COPY_OUT_RECOVERY)/root/vendor/firmware_mnt/.mountpoint \
     $(LOCAL_PATH)/rootdir/etc/fstab.qcom:$(TARGET_COPY_OUT_VENDOR_RAMDISK)/first_stage_ramdisk/fstab.qcom
 
 PRODUCT_PACKAGES += \
