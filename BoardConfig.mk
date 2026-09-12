@@ -124,6 +124,15 @@ BOARD_BOOTCONFIG := \
     androidboot.vendor.qspa=true \
     androidboot.hypervisor.protected_vm.supported=false
 
+# Bring-up-only first-stage diagnostics.  This invokes a ramdisk watchdog
+# before first-stage mounts and sends fatal init failures back to recovery so
+# the ramoops console can be collected without a cold reset.
+ifeq ($(FLOURITE_FIRST_STAGE_DIAGNOSTICS),true)
+BOARD_BOOTCONFIG += \
+    androidboot.first_stage_console=1 \
+    androidboot.init_fatal_reboot_target=recovery
+endif
+
 # The stock 6.1.138 image/modules are the bootable default. Xiaomi's
 # published 6.1.68 source can be selected explicitly for compile testing.
 ifeq ($(FLOURITE_BUILD_KERNEL_FROM_SOURCE),true)

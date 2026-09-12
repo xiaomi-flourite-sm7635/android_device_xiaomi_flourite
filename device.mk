@@ -17,6 +17,11 @@ PRODUCT_VIRTUAL_AB_COMPRESSION_METHOD := lz4
 PRODUCT_VIRTUAL_AB_COMPRESSION_FACTOR := 4096
 PRODUCT_VIRTUAL_AB_COW_VERSION := 2
 
+# Install the pre-mount logger only in explicitly requested diagnostic builds.
+ifeq ($(FLOURITE_FIRST_STAGE_DIAGNOSTICS),true)
+PRODUCT_PACKAGES += flourite_first_stage_diag
+endif
+
 # Dalvik vm configs
 $(call inherit-product, frameworks/native/build/phone-xhdpi-6144-dalvik-heap.mk)
 

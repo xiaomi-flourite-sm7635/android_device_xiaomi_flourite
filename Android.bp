@@ -8,8 +8,33 @@ soong_namespace {
         "hardware/google/interfaces",
         "hardware/google/pixel",
         "hardware/qcom-caf/common/libqti-perfd-client",
-        "hardware/xiaomi"
+        "hardware/xiaomi",
     ],
+}
+
+cc_binary {
+    name: "flourite_first_stage_diag_bin",
+    srcs: ["diagnostics/first_stage_diag.c"],
+    cflags: [
+        "-Wall",
+        "-Werror",
+        "-Wextra",
+    ],
+    static_executable: true,
+    system_shared_libs: [],
+    ramdisk: true,
+    installable: false,
+}
+
+// first_stage_console executes this exact root path before first-stage mounts.
+// A prebuilt_root wrapper is required because Soong only permits first-stage
+// init itself to set install_in_root on a cc_binary.
+prebuilt_root {
+    name: "flourite_first_stage_diag",
+    src: ":flourite_first_stage_diag_bin",
+    filename: "first_stage.sh",
+    ramdisk: true,
+    install_in_root: true,
 }
 
 install_symlink {
