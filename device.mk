@@ -19,7 +19,9 @@ PRODUCT_VIRTUAL_AB_COW_VERSION := 2
 
 # Install the pre-mount logger only in explicitly requested diagnostic builds.
 ifeq ($(FLOURITE_FIRST_STAGE_DIAGNOSTICS),true)
-PRODUCT_PACKAGES += flourite_first_stage_diag
+PRODUCT_PACKAGES += \
+    flourite_first_stage_diag \
+    flourite_first_stage_diag_recovery
 endif
 
 # Dalvik vm configs

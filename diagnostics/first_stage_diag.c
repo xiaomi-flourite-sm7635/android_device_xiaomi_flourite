@@ -8,6 +8,7 @@
 #include <errno.h>
 #include <fcntl.h>
 #include <linux/reboot.h>
+#include <signal.h>
 #include <stdarg.h>
 #include <stdbool.h>
 #include <stdio.h>
@@ -211,6 +212,26 @@ static bool SecondStageStarted(void) {
   return stat("/dev/socket/property_service", &info) == 0;
 }
 
+static bool RecoveryMode(void) {
+  return access("/system/bin/recovery", F_OK) == 0;
+}
+
+static void ReleaseFirstStageInit(void) {
+  pid_t console_supervisor = getppid();
+  if (console_supervisor <= 1) {
+    Log("cannot identify first-stage console supervisor, parent=%d",
+        console_supervisor);
+    return;
+  }
+
+  if (kill(console_supervisor, SIGKILL) == -1) {
+    Log("failed to terminate first-stage console supervisor %d: %s",
+        console_supervisor, strerror(errno));
+    return;
+  }
+  Log("terminated first-stage console supervisor %d", console_supervisor);
+}
+
 static void RebootToRecovery(void) {
   Log("watchdog timeout; requesting warm reboot to recovery");
 
@@ -234,15 +255,24 @@ int main(void) {
   DumpFile("bootconfig", "/proc/bootconfig", 32768);
   DumpState("before first-stage mounts");
 
+  if (RecoveryMode()) {
+    Log("recovery mode detected; watchdog disabled");
+    ReleaseFirstStageInit();
+    close(kmsg_fd);
+    return 0;
+  }
+
   pid_t watchdog = fork();
   if (watchdog < 0) {
     Log("failed to fork watchdog: %s", strerror(errno));
+    ReleaseFirstStageInit();
     close(kmsg_fd);
     return 1;
   }
   if (watchdog > 0) {
     Log("watchdog armed for %d seconds, pid=%d", WATCHDOG_TIMEOUT_SECONDS,
         watchdog);
+    ReleaseFirstStageInit();
     close(kmsg_fd);
     return 0;
   }
