@@ -124,12 +124,14 @@ BOARD_BOOTCONFIG := \
     androidboot.vendor.qspa=true \
     androidboot.hypervisor.protected_vm.supported=false
 
-# Bring-up-only first-stage diagnostics. This invokes a ramdisk watchdog
-# before first-stage mounts, persists the failed-boot trace in Xiaomi's oops
-# partition, and returns fatal init failures to recovery for collection.
+# Bring-up-only first-stage diagnostics. The matching system/core init patch
+# invokes the ramdisk watchdog before kernel-module loading, persists the
+# failed-boot trace in Xiaomi's oops partition, and returns fatal init failures
+# to recovery for collection.
 ifeq ($(FLOURITE_FIRST_STAGE_DIAGNOSTICS),true)
 BOARD_BOOTCONFIG += \
     androidboot.first_stage_console=1 \
+    androidboot.first_stage_console_early=1 \
     androidboot.init_fatal_reboot_target=recovery
 endif
 

@@ -25,14 +25,14 @@
 
 #define DIAG_PREFIX "flourite-first-stage: "
 #define WATCHDOG_TIMEOUT_SECONDS 90
-#define OOPS_DISCOVERY_ATTEMPTS 50
+#define OOPS_DISCOVERY_ATTEMPTS 200
 #define OOPS_DISCOVERY_DELAY_US 100000
 #define OOPS_MAX_PARTITION_SIZE (16ULL * 1024ULL * 1024ULL)
 #define OOPS_RECORD_SIZE (2ULL * 1024ULL * 1024ULL)
 #define OOPS_HEADER_SIZE 4096ULL
 #define MTDOOPS_MAGIC_V1 UINT32_C(0x5d005d00)
 #define MTDOOPS_MAGIC_V2 UINT32_C(0x5d005e00)
-#define PERSISTENT_MARKER "FLOURITE_FIRST_STAGE_DIAG_V3"
+#define PERSISTENT_MARKER "FLOURITE_FIRST_STAGE_DIAG_V4"
 
 static int kmsg_fd = -1;
 static int kmsg_read_fd = -1;
@@ -342,7 +342,7 @@ static void UpdatePersistentHeader(const char *status, int elapsed) {
   (void)snprintf((char *)header + sizeof(struct MtdOopsHeader),
                  sizeof(header) - sizeof(struct MtdOopsHeader),
                  PERSISTENT_MARKER
-                 "\nversion=3\nstatus=%s\nelapsed_seconds=%d\n"
+                 "\nversion=4\nstatus=%s\nelapsed_seconds=%d\n"
                  "record_index=%u\nsequence=%u\nlog_bytes=%llu\n"
                  "truncated=%d\nsecond_stage_seen=%d\n",
                  status, elapsed, oops_record_index, oops_sequence,
@@ -405,7 +405,7 @@ static bool InitializePersistentLog(void) {
   oops_write_offset = OOPS_HEADER_SIZE;
   oops_log_truncated = false;
   UpdatePersistentHeader("initializing", 0);
-  PersistentAppendString("\n--- FLOURITE V3 KMSG BEGIN ---\n");
+  PersistentAppendString("\n--- FLOURITE V4 KMSG BEGIN ---\n");
   Log("persistent logger attached to %s, size=%llu, record=%u, sequence=%u",
       selected_path, (unsigned long long)partition_size, oops_record_index,
       oops_sequence);
@@ -418,8 +418,8 @@ static void PrepareKernelLogReader(void) {
     Log("cannot open /dev/kmsg for persistent capture: %s", strerror(errno));
     return;
   }
-  if (lseek(kmsg_read_fd, 0, SEEK_END) < 0) {
-    Log("cannot seek /dev/kmsg to current tail: %s", strerror(errno));
+  if (lseek(kmsg_read_fd, 0, SEEK_SET) < 0) {
+    Log("cannot rewind /dev/kmsg for full capture: %s", strerror(errno));
     close(kmsg_read_fd);
     kmsg_read_fd = -1;
   }
@@ -671,22 +671,35 @@ int main(void) {
     return 1;
   }
 
-  Log("diagnostic hook started, pid=%d", getpid());
+  bool recovery_mode = RecoveryMode();
+  if (!recovery_mode) {
+    PrepareKernelLogReader();
+  }
+
+  Log("diagnostic hook V4 started, pid=%d", getpid());
   DumpFile("cmdline", "/proc/cmdline", 16384);
   DumpFile("bootconfig", "/proc/bootconfig", 32768);
   DumpState("before first-stage mounts");
 
-  if (RecoveryMode()) {
+  if (recovery_mode) {
     Log("recovery mode detected; watchdog disabled");
     ReleaseFirstStageInit();
     close(kmsg_fd);
     return 0;
   }
 
-  PrepareKernelLogReader();
+  int ready_pipe[2] = {-1, -1};
+  if (pipe(ready_pipe) != 0) {
+    Log("failed to create watchdog readiness pipe: %s", strerror(errno));
+  }
+
   pid_t watchdog = fork();
   if (watchdog < 0) {
     Log("failed to fork watchdog: %s", strerror(errno));
+    if (ready_pipe[0] >= 0) {
+      close(ready_pipe[0]);
+      close(ready_pipe[1]);
+    }
     ReleaseFirstStageInit();
     if (kmsg_read_fd >= 0) {
       close(kmsg_read_fd);
@@ -695,6 +708,18 @@ int main(void) {
     return 1;
   }
   if (watchdog > 0) {
+    if (ready_pipe[0] >= 0) {
+      close(ready_pipe[1]);
+      char ready = '\0';
+      ssize_t bytes;
+      do {
+        bytes = read(ready_pipe[0], &ready, sizeof(ready));
+      } while (bytes < 0 && errno == EINTR);
+      close(ready_pipe[0]);
+      if (bytes != 1 || ready != 'R') {
+        Log("watchdog child did not confirm readiness");
+      }
+    }
     Log("watchdog armed for %d seconds, pid=%d", WATCHDOG_TIMEOUT_SECONDS,
         watchdog);
     ReleaseFirstStageInit();
@@ -705,7 +730,22 @@ int main(void) {
     return 0;
   }
 
-  (void)setsid();
+  if (ready_pipe[0] >= 0) {
+    close(ready_pipe[0]);
+  }
+  (void)signal(SIGHUP, SIG_IGN);
+  if (setsid() < 0) {
+    Log("watchdog setsid failed: %s", strerror(errno));
+  }
+  if (ready_pipe[1] >= 0) {
+    const char ready = 'R';
+    ssize_t bytes;
+    do {
+      bytes = write(ready_pipe[1], &ready, sizeof(ready));
+    } while (bytes < 0 && errno == EINTR);
+    close(ready_pipe[1]);
+  }
+
   (void)InitializePersistentLog();
   DumpState("persistent logger online");
   SyncPersistentLog("watchdog-active", 0);

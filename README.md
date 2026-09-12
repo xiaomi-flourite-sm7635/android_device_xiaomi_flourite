@@ -18,3 +18,6 @@ for source-kernel compile testing.
 Initial build validation covers `init_boot`, `recovery`, `vendor`, `odm`,
 `vendor_dlkm` and `system_dlkm` images.  On-device boot and hardware validation
 are still required before this tree can be considered release-ready.
+
+Temporary pre-ADB bring-up instrumentation is documented in
+[`diagnostics/README.md`](diagnostics/README.md).

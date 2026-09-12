@@ -1,0 +1,79 @@
+From 0f9b4fd920d07385cf8c0bd8cb26e326affc6afe Mon Sep 17 00:00:00 2001
+From: lufrz <314570110+lufrz@users.noreply.github.com>
+Date: Sun, 13 Sep 2026 01:28:05 +0200
+Subject: [PATCH] init: support an early first-stage console
+
+Change-Id: If35921e38d4a1b84d48fbe06114a8b03db199eae
+---
+ init/first_stage_console.cpp |  5 +++++
+ init/first_stage_console.h   |  1 +
+ init/first_stage_init.cpp    | 12 ++++++++++--
+ 3 files changed, 16 insertions(+), 2 deletions(-)
+
+diff --git a/init/first_stage_console.cpp b/init/first_stage_console.cpp
+index f6f9329..2f84a3f 100644
+--- a/init/first_stage_console.cpp
++++ b/init/first_stage_console.cpp
+@@ -140,5 +140,10 @@ int FirstStageConsole(const std::string& cmdline, const std::string& bootconfig)
+     return FirstStageConsoleParam::DISABLED;
+ }
+ 
++bool FirstStageConsoleEarly(const std::string& cmdline, const std::string& bootconfig) {
++    return bootconfig.find("androidboot.first_stage_console_early = \"1\"") != std::string::npos ||
++           cmdline.find("androidboot.first_stage_console_early=1") != std::string::npos;
++}
++
+ }  // namespace init
+ }  // namespace android
+diff --git a/init/first_stage_console.h b/init/first_stage_console.h
+index 4a30d35..5c53046 100644
+--- a/init/first_stage_console.h
++++ b/init/first_stage_console.h
+@@ -30,6 +30,7 @@ enum FirstStageConsoleParam {
+ 
+ void StartConsole(const std::string& cmdline);
+ int FirstStageConsole(const std::string& cmdline, const std::string& bootconfig);
++bool FirstStageConsoleEarly(const std::string& cmdline, const std::string& bootconfig);
+ 
+ }  // namespace init
+ }  // namespace android
+diff --git a/init/first_stage_init.cpp b/init/first_stage_init.cpp
+index 8b94699..e841c82 100644
+--- a/init/first_stage_init.cpp
++++ b/init/first_stage_init.cpp
+@@ -424,6 +424,15 @@ int FirstStageMain(int argc, char** argv) {
+ 
+     LOG(INFO) << "init first stage started!";
+ 
++    auto want_console = ALLOW_FIRST_STAGE_CONSOLE ? FirstStageConsole(cmdline, bootconfig) : 0;
++    const bool start_console_early = want_console == FirstStageConsoleParam::CONSOLE_ON_FAILURE &&
++                                     FirstStageConsoleEarly(cmdline, bootconfig);
++    if (start_console_early) {
++        LOG(INFO) << "Starting requested early first-stage console";
++        StartConsole(cmdline);
++        LOG(INFO) << "Early first-stage console released";
++    }
++
+     auto old_root_dir = std::unique_ptr<DIR, decltype(&closedir)>{opendir("/"), closedir};
+     if (!old_root_dir) {
+         PLOG(ERROR) << "Could not opendir(\"/\"), not freeing ramdisk";
+@@ -435,7 +444,6 @@ int FirstStageMain(int argc, char** argv) {
+         old_root_dir.reset();
+     }
+ 
+-    auto want_console = ALLOW_FIRST_STAGE_CONSOLE ? FirstStageConsole(cmdline, bootconfig) : 0;
+     auto want_parallel_mode = Modprobe::LoadParallelMode::NONE;
+     auto want_parallel_test = false;
+     if (bootconfig.find("androidboot.load_modules_parallel = \"true\"") != std::string::npos)
+@@ -474,7 +482,7 @@ int FirstStageMain(int argc, char** argv) {
+     std::unique_ptr<FirstStageMount> fsm;
+ 
+     bool created_devices = false;
+-    if (want_console == FirstStageConsoleParam::CONSOLE_ON_FAILURE) {
++    if (want_console == FirstStageConsoleParam::CONSOLE_ON_FAILURE && !start_console_early) {
+         if (!IsRecoveryMode()) {
+             fsm = CreateFirstStageMount(cmdline);
+             if (fsm) {
+-- 
+2.53.0
+
