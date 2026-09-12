@@ -1,20 +1,40 @@
-From 0f9b4fd920d07385cf8c0bd8cb26e326affc6afe Mon Sep 17 00:00:00 2001
+From 0bceb8563dda0485905226e192bf835a8d8b7637 Mon Sep 17 00:00:00 2001
 From: lufrz <314570110+lufrz@users.noreply.github.com>
 Date: Sun, 13 Sep 2026 01:28:05 +0200
 Subject: [PATCH] init: support an early first-stage console
 
 Change-Id: If35921e38d4a1b84d48fbe06114a8b03db199eae
 ---
- init/first_stage_console.cpp |  5 +++++
+ init/first_stage_console.cpp | 11 ++++++++++-
  init/first_stage_console.h   |  1 +
  init/first_stage_init.cpp    | 12 ++++++++++--
- 3 files changed, 16 insertions(+), 2 deletions(-)
+ 3 files changed, 21 insertions(+), 3 deletions(-)
 
 diff --git a/init/first_stage_console.cpp b/init/first_stage_console.cpp
-index f6f9329..2f84a3f 100644
+index f6f9329..99ab2d4 100644
 --- a/init/first_stage_console.cpp
 +++ b/init/first_stage_console.cpp
-@@ -140,5 +140,10 @@ int FirstStageConsole(const std::string& cmdline, const std::string& bootconfig)
+@@ -92,7 +92,6 @@ void StartConsole(const std::string& cmdline) {
+         .sa_flags = SA_NOCLDWAIT, .sa_handler = SIG_DFL
+     };
+ 
+-    sigaction(SIGCHLD, &chld_act, nullptr);
+     pid_t pid = fork();
+     if (pid != 0) {
+         wait(NULL);
+@@ -100,6 +99,11 @@ void StartConsole(const std::string& cmdline) {
+         return;
+     }
+ 
++    // Only the console supervisor should discard its helper zombies. Changing
++    // SIGCHLD in first-stage init breaks later code that needs to wait for its
++    // own children when the console is started early.
++    sigaction(SIGCHLD, &chld_act, nullptr);
++
+     if (console) console = SetupConsole();
+ 
+     LOG(INFO) << "Attempting to run /first_stage.sh...";
+@@ -140,5 +144,10 @@ int FirstStageConsole(const std::string& cmdline, const std::string& bootconfig)
      return FirstStageConsoleParam::DISABLED;
  }
  
@@ -76,4 +96,3 @@ index 8b94699..e841c82 100644
              if (fsm) {
 -- 
 2.53.0
-

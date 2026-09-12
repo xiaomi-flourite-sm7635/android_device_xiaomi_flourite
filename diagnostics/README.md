@@ -3,7 +3,7 @@
 These files are temporary bring-up instrumentation. They are not intended for
 release builds.
 
-The V4 logger must start before the normal `first_stage_console` call, because
+The V5 logger must start before the normal `first_stage_console` call, because
 that call is reached only after kernel-module loading and early block-device
 creation. Apply the matching LineageOS 24 platform patch from the source root:
 
@@ -23,7 +23,9 @@ m initbootimage recoveryimage vendorbootimage vbmetaimage
 
 The flag adds both `androidboot.first_stage_console=1` and
 `androidboot.first_stage_console_early=1`. The latter has no effect without the
-platform patch. Normal builds leave the logger and both bootconfig parameters
+platform patch. V5 keeps the console supervisor's `SIGCHLD` handling isolated
+from first-stage init, so PID 1 can still wait for module-loading and other
+helper processes. Normal builds leave the logger and both bootconfig parameters
 out.
 
 During one normal diagnostic boot, the watchdog replaces one 2 MiB record in
