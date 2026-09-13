@@ -1,0 +1,15 @@
+type hal_touchfeature_xiaomi_default, domain;
+type hal_touchfeature_xiaomi_default_exec, exec_type, vendor_file_type, file_type;
+type hal_touchfeature_xiaomi_service, hal_service_type, protected_service, service_manager_type;
+
+init_daemon_domain(hal_touchfeature_xiaomi_default)
+hal_server_domain(hal_touchfeature_xiaomi_default, hal_touchfeature_xiaomi)
+
+# The Xiaomi service publishes an AIDL interface, but also queries HIDL
+# services such as the framework sensor service during initialization.
+binder_use(hal_touchfeature_xiaomi_default)
+hwbinder_use(hal_touchfeature_xiaomi_default)
+add_service(hal_touchfeature_xiaomi_server, hal_touchfeature_xiaomi_service)
+
+allow hal_touchfeature_xiaomi_default fwk_sensor_hwservice:hwservice_manager find;
+allow hal_touchfeature_xiaomi touchfeature_device:chr_file rw_file_perms;

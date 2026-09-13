@@ -67,6 +67,10 @@
 # Firmware
 /vendor/firmware_mnt(/.*)? u:object_r:firmware_file:s0
 
+# NXP security services shipped from ODM
+/odm/bin/hw/android\.hardware\.security\.keymint-service\.strongbox-nxp u:object_r:vendor_hal_keymint_strongbox_exec:s0
+/odm/bin/hw/android\.hardware\.weaver-service\.nxp-qti u:object_r:vendor_hal_weaver_default_exec:s0
+
 # GNSS
 /(odm|vendor|vendor/odm|system/vendor/odm)/bin/hw/android\.hardware\.gnss.*-service-qti u:object_r:vendor_hal_gnss_qti_exec:s0
 /data/vendor/ins(/.*)? u:object_r:vendor_ins_vendor_data_file:s0
@@ -92,7 +96,12 @@
 /vendor/bin/hw/android\.hardware\.sensors-service\.xiaomi-multihal                                                   u:object_r:hal_sensors_default_exec:s0
 /(vendor|system/vendor)/bin/sensor-notifier u:object_r:vendor_sensor_notifier_exec:s0
 
+# NFC
+/odm/bin/hw/android\.hardware\.nqnfc-service\.nxp u:object_r:hal_nfc_default_exec:s0
+
 # Touch
 /dev/xiaomi-touch u:object_r:touchfeature_device:s0
+/odm/bin/hw/vendor\.xiaomi\.hw\.touchfeature-service u:object_r:hal_touchfeature_xiaomi_default_exec:s0
+/odm/bin/hw/vendor\.xiaomi\.hardware\.vibratorfeature\.service u:object_r:hal_vibrator_default_exec:s0
 /sys/devices/virtual/touch/touch_dev/ear_sensor u:object_r:sysfs_tp_virtual_prox:s0
 /sys/devices/virtual/touch/touch_dev/palm_sensor u:object_r:sysfs_tp_virtual_prox:s0
