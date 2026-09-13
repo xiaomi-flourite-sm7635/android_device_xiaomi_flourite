@@ -54,6 +54,12 @@ PRODUCT_PACKAGES += \
 BOARD_SHIPPING_API_LEVEL := 34
 PRODUCT_SHIPPING_API_LEVEL := 35
 
+# Legacy HIDL services required by the vendor image
+PRODUCT_PACKAGES += \
+    android.hidl.allocator@1.0-service \
+    android.hidl.memory@1.0-impl \
+    hwservicemanager
+
 # ART
 PRODUCT_ENABLE_UFFD_GC := true
 
