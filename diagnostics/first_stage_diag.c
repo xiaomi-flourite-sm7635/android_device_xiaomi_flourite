@@ -34,7 +34,7 @@
 #define OOPS_HEADER_SIZE 4096ULL
 #define MTDOOPS_MAGIC_V1 UINT32_C(0x5d005d00)
 #define MTDOOPS_MAGIC_V2 UINT32_C(0x5d005e00)
-#define PERSISTENT_MARKER "FLOURITE_FIRST_STAGE_DIAG_V7"
+#define PERSISTENT_MARKER "FLOURITE_FIRST_STAGE_DIAG_V8"
 #define EARLY_OOPS_NODE ".flourite-first-stage-oops"
 
 static int kmsg_fd = -1;
@@ -50,6 +50,10 @@ static uint32_t oops_sequence;
 static unsigned int oops_record_index;
 static bool oops_log_truncated;
 static bool second_stage_logged;
+static bool direct_persistent_log;
+static bool direct_persistent_log_write;
+
+static void PersistentAppend(const void *buffer, size_t length);
 
 static void Log(const char *format, ...) {
   char message[2048];
@@ -72,6 +76,17 @@ static void Log(const char *format, ...) {
     length = sizeof(message) - 2;
   }
   message[length++] = '\n';
+
+  // /dev/kmsg rate-limits bursts from userspace. Detailed process snapshots
+  // are the very lines most likely to be dropped, so write those straight to
+  // the validated persistent record once it is available.
+  if (direct_persistent_log && oops_fd >= 0 && !oops_log_truncated &&
+      !direct_persistent_log_write) {
+    direct_persistent_log_write = true;
+    PersistentAppend(message, length);
+    direct_persistent_log_write = false;
+    return;
+  }
   (void)write(kmsg_fd, message, length);
 }
 
@@ -482,7 +497,7 @@ static void UpdatePersistentHeader(const char *status, int elapsed) {
   (void)snprintf((char *)header + sizeof(struct MtdOopsHeader),
                  sizeof(header) - sizeof(struct MtdOopsHeader),
                  PERSISTENT_MARKER
-                 "\nversion=7\nstatus=%s\nelapsed_seconds=%d\n"
+                 "\nversion=8\nstatus=%s\nelapsed_seconds=%d\n"
                  "record_index=%u\nsequence=%u\nlog_bytes=%llu\n"
                  "truncated=%d\nsecond_stage_seen=%d\n",
                  status, elapsed, oops_record_index, oops_sequence,
@@ -545,7 +560,7 @@ static bool InitializePersistentLog(void) {
   oops_write_offset = OOPS_HEADER_SIZE;
   oops_log_truncated = false;
   UpdatePersistentHeader("initializing", 0);
-  PersistentAppendString("\n--- FLOURITE V7 KMSG BEGIN ---\n");
+  PersistentAppendString("\n--- FLOURITE V8 KMSG BEGIN ---\n");
   Log("persistent logger attached to %s, size=%llu, record=%u, sequence=%u",
       selected_path, (unsigned long long)partition_size, oops_record_index,
       oops_sequence);
@@ -731,6 +746,14 @@ static bool IsInterestingProcess(const char *name) {
       "e2fsck",
       "fsck.f2fs",
       "vold_prepare_su",
+      "blkid",
+      "sgdisk",
+      "fsck_msdos",
+      "fsck.exfat",
+      "mount",
+      "umount",
+      "snapuserd",
+      "keystore2",
   };
 
   for (size_t index = 0; index < sizeof(names) / sizeof(names[0]); ++index) {
@@ -801,11 +824,22 @@ static void DumpProcessThreadsAt(int process_fd, const char *pid,
         label_length >= 0 && (size_t)label_length < sizeof(label)) {
       DumpFileAt(label, dirfd(tasks), path, 8192);
     }
+
+    path_length = snprintf(path, sizeof(path), "%s/syscall", entry->d_name);
+    label_length = snprintf(label, sizeof(label), "task-%s-%s-%s-syscall", pid,
+                            entry->d_name, thread_name);
+    if (path_length >= 0 && (size_t)path_length < sizeof(path) &&
+        label_length >= 0 && (size_t)label_length < sizeof(label)) {
+      DumpFileAt(label, dirfd(tasks), path, 1024);
+    }
   }
   closedir(tasks);
 }
 
 static void DumpProcessStates(void) {
+  bool previous_direct_persistent_log = direct_persistent_log;
+  direct_persistent_log = oops_fd >= 0;
+
   int scan_fd;
   if (proc_root_fd >= 0) {
     scan_fd = openat(proc_root_fd, ".", O_RDONLY | O_DIRECTORY | O_CLOEXEC);
@@ -814,16 +848,21 @@ static void DumpProcessStates(void) {
   }
   if (scan_fd < 0) {
     Log("process scan unavailable: %s", strerror(errno));
+    direct_persistent_log = previous_direct_persistent_log;
     return;
   }
 
   DIR *proc = fdopendir(scan_fd);
   if (proc == NULL) {
+    Log("process fdopendir unavailable: %s", strerror(errno));
     close(scan_fd);
+    direct_persistent_log = previous_direct_persistent_log;
     return;
   }
 
   Log("process scan begin");
+  unsigned int scanned = 0;
+  unsigned int interesting = 0;
   struct dirent *entry;
   while ((entry = readdir(proc)) != NULL) {
     if (!IsNumericName(entry->d_name)) {
@@ -844,9 +883,11 @@ static void DumpProcessStates(void) {
       continue;
     }
     TrimLineEnd(process_name, &length);
+    ++scanned;
     Log("process pid=%s comm=%s", entry->d_name, process_name);
 
     if (IsInterestingProcess(process_name)) {
+      ++interesting;
       char label[128];
       int label_length = snprintf(label, sizeof(label), "process-%s-%s-cmdline",
                                   entry->d_name, process_name);
@@ -862,8 +903,9 @@ static void DumpProcessStates(void) {
     }
     close(process_fd);
   }
-  Log("process scan end");
+  Log("process scan end: scanned=%u interesting=%u", scanned, interesting);
   closedir(proc);
+  direct_persistent_log = previous_direct_persistent_log;
 }
 
 static bool ProcessExists(const char *wanted_name) {
@@ -1042,7 +1084,7 @@ int main(void) {
     PrepareKernelLogReader();
   }
 
-  Log("diagnostic hook V7 started, pid=%d", getpid());
+  Log("diagnostic hook V8 started, pid=%d", getpid());
   DumpFile("cmdline", "/proc/cmdline", 16384);
   DumpFile("bootconfig", "/proc/bootconfig", 32768);
   DumpState("before first-stage mounts");
