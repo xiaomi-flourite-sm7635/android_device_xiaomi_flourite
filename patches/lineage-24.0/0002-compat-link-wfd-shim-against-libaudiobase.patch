@@ -1,0 +1,29 @@
+From 8c3d03cc05cb5e59ad18a910ef2d9126529a05d5 Mon Sep 17 00:00:00 2001
+From: lufrz <314570110+lufrz@users.noreply.github.com>
+Date: Sun, 13 Sep 2026 18:42:00 +0200
+Subject: [PATCH] compat: Link WFD shim against libaudiobase
+
+AudioSystem is provided by libaudiobase in the current Android 17 tree.
+Link it directly so libwfdservice_shim can resolve
+AudioSystem::setDeviceConnectionState.
+
+Change-Id: Iec22c3c7725155e22b2c3f1d98ebd5211b8802ab
+---
+ Android.bp | 1 +
+ 1 file changed, 1 insertion(+)
+
+diff --git a/Android.bp b/Android.bp
+index 1af7c43..1dce802 100644
+--- a/Android.bp
++++ b/Android.bp
+@@ -577,6 +577,7 @@ cc_library_shared {
+     shared_libs: [
+         "android.media.audio.common.types-V5-cpp",
+         "audioclient-types-aidl-cpp",
++        "libaudiobase",
+         "libaudioclient",
+         "libaudiofoundation",
+         "libutils",
+-- 
+2.53.0
+
