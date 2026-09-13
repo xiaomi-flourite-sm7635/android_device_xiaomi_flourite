@@ -34,7 +34,7 @@
 #define OOPS_HEADER_SIZE 4096ULL
 #define MTDOOPS_MAGIC_V1 UINT32_C(0x5d005d00)
 #define MTDOOPS_MAGIC_V2 UINT32_C(0x5d005e00)
-#define PERSISTENT_MARKER "FLOURITE_FIRST_STAGE_DIAG_V6"
+#define PERSISTENT_MARKER "FLOURITE_FIRST_STAGE_DIAG_V7"
 #define EARLY_OOPS_NODE ".flourite-first-stage-oops"
 
 static int kmsg_fd = -1;
@@ -482,7 +482,7 @@ static void UpdatePersistentHeader(const char *status, int elapsed) {
   (void)snprintf((char *)header + sizeof(struct MtdOopsHeader),
                  sizeof(header) - sizeof(struct MtdOopsHeader),
                  PERSISTENT_MARKER
-                 "\nversion=6\nstatus=%s\nelapsed_seconds=%d\n"
+                 "\nversion=7\nstatus=%s\nelapsed_seconds=%d\n"
                  "record_index=%u\nsequence=%u\nlog_bytes=%llu\n"
                  "truncated=%d\nsecond_stage_seen=%d\n",
                  status, elapsed, oops_record_index, oops_sequence,
@@ -545,7 +545,7 @@ static bool InitializePersistentLog(void) {
   oops_write_offset = OOPS_HEADER_SIZE;
   oops_log_truncated = false;
   UpdatePersistentHeader("initializing", 0);
-  PersistentAppendString("\n--- FLOURITE V6 KMSG BEGIN ---\n");
+  PersistentAppendString("\n--- FLOURITE V7 KMSG BEGIN ---\n");
   Log("persistent logger attached to %s, size=%llu, record=%u, sequence=%u",
       selected_path, (unsigned long long)partition_size, oops_record_index,
       oops_sequence);
@@ -716,6 +716,156 @@ static bool IsNumericName(const char *name) {
   return true;
 }
 
+static bool IsInterestingProcess(const char *name) {
+  static const char *const names[] = {
+      "init",
+      "vold",
+      "vdc",
+      "ueventd",
+      "servicemanager",
+      "vndservicemanag",
+      "hwservicemanage",
+      "logd",
+      "apexd",
+      "adbd",
+      "e2fsck",
+      "fsck.f2fs",
+      "vold_prepare_su",
+  };
+
+  for (size_t index = 0; index < sizeof(names) / sizeof(names[0]); ++index) {
+    if (strcmp(name, names[index]) == 0) {
+      return true;
+    }
+  }
+  return false;
+}
+
+static void TrimLineEnd(char *buffer, ssize_t *length) {
+  while (*length > 0 &&
+         (buffer[*length - 1] == '\n' || buffer[*length - 1] == '\r' ||
+          buffer[*length - 1] == ' ')) {
+    --*length;
+  }
+  buffer[*length] = '\0';
+}
+
+static void DumpProcessThreadsAt(int process_fd, const char *pid,
+                                 const char *process_name) {
+  int scan_fd = openat(process_fd, "task", O_RDONLY | O_DIRECTORY | O_CLOEXEC);
+  if (scan_fd < 0) {
+    Log("process pid=%s comm=%s task directory unavailable: %s", pid,
+        process_name, strerror(errno));
+    return;
+  }
+
+  DIR *tasks = fdopendir(scan_fd);
+  if (tasks == NULL) {
+    close(scan_fd);
+    return;
+  }
+
+  struct dirent *entry;
+  while ((entry = readdir(tasks)) != NULL) {
+    if (!IsNumericName(entry->d_name)) {
+      continue;
+    }
+
+    char path[128];
+    char label[160];
+    char thread_name[64] = "unknown";
+    int path_length = snprintf(path, sizeof(path), "%s/comm", entry->d_name);
+    if (path_length >= 0 && (size_t)path_length < sizeof(path)) {
+      ssize_t length =
+          ReadSmallFileAt(dirfd(tasks), path, thread_name, sizeof(thread_name));
+      if (length > 0) {
+        TrimLineEnd(thread_name, &length);
+      }
+    }
+
+    Log("task pid=%s tid=%s comm=%s", pid, entry->d_name, thread_name);
+
+    path_length = snprintf(path, sizeof(path), "%s/wchan", entry->d_name);
+    int label_length = snprintf(label, sizeof(label),
+                                "task-%s-%s-%s-wchan", pid, entry->d_name,
+                                thread_name);
+    if (path_length >= 0 && (size_t)path_length < sizeof(path) &&
+        label_length >= 0 && (size_t)label_length < sizeof(label)) {
+      DumpFileAt(label, dirfd(tasks), path, 512);
+    }
+
+    path_length = snprintf(path, sizeof(path), "%s/stack", entry->d_name);
+    label_length = snprintf(label, sizeof(label), "task-%s-%s-%s-stack", pid,
+                            entry->d_name, thread_name);
+    if (path_length >= 0 && (size_t)path_length < sizeof(path) &&
+        label_length >= 0 && (size_t)label_length < sizeof(label)) {
+      DumpFileAt(label, dirfd(tasks), path, 8192);
+    }
+  }
+  closedir(tasks);
+}
+
+static void DumpProcessStates(void) {
+  int scan_fd;
+  if (proc_root_fd >= 0) {
+    scan_fd = openat(proc_root_fd, ".", O_RDONLY | O_DIRECTORY | O_CLOEXEC);
+  } else {
+    scan_fd = open("/proc", O_RDONLY | O_DIRECTORY | O_CLOEXEC);
+  }
+  if (scan_fd < 0) {
+    Log("process scan unavailable: %s", strerror(errno));
+    return;
+  }
+
+  DIR *proc = fdopendir(scan_fd);
+  if (proc == NULL) {
+    close(scan_fd);
+    return;
+  }
+
+  Log("process scan begin");
+  struct dirent *entry;
+  while ((entry = readdir(proc)) != NULL) {
+    if (!IsNumericName(entry->d_name)) {
+      continue;
+    }
+
+    int process_fd =
+        openat(dirfd(proc), entry->d_name, O_RDONLY | O_DIRECTORY | O_CLOEXEC);
+    if (process_fd < 0) {
+      continue;
+    }
+
+    char process_name[64];
+    ssize_t length =
+        ReadSmallFileAt(process_fd, "comm", process_name, sizeof(process_name));
+    if (length <= 0) {
+      close(process_fd);
+      continue;
+    }
+    TrimLineEnd(process_name, &length);
+    Log("process pid=%s comm=%s", entry->d_name, process_name);
+
+    if (IsInterestingProcess(process_name)) {
+      char label[128];
+      int label_length = snprintf(label, sizeof(label), "process-%s-%s-cmdline",
+                                  entry->d_name, process_name);
+      if (label_length >= 0 && (size_t)label_length < sizeof(label)) {
+        DumpFileAt(label, process_fd, "cmdline", 4096);
+      }
+      label_length = snprintf(label, sizeof(label), "process-%s-%s-status",
+                              entry->d_name, process_name);
+      if (label_length >= 0 && (size_t)label_length < sizeof(label)) {
+        DumpFileAt(label, process_fd, "status", 8192);
+      }
+      DumpProcessThreadsAt(process_fd, entry->d_name, process_name);
+    }
+    close(process_fd);
+  }
+  Log("process scan end");
+  closedir(proc);
+}
+
 static bool ProcessExists(const char *wanted_name) {
   int scan_fd;
   if (proc_root_fd >= 0) {
@@ -793,6 +943,7 @@ static void DumpState(const char *phase) {
   DumpDirectory("/dev/block/mapper", 128);
   DumpDirectory("/dev/block/by-name", 192);
   DumpDirectory("/dev/block/bootdevice/by-name", 192);
+  DumpProcessStates();
 }
 
 static bool SecondStageStarted(void) {
@@ -891,7 +1042,7 @@ int main(void) {
     PrepareKernelLogReader();
   }
 
-  Log("diagnostic hook V6 started, pid=%d", getpid());
+  Log("diagnostic hook V7 started, pid=%d", getpid());
   DumpFile("cmdline", "/proc/cmdline", 16384);
   DumpFile("bootconfig", "/proc/bootconfig", 32768);
   DumpState("before first-stage mounts");
