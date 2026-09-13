@@ -147,6 +147,7 @@ PRODUCT_COPY_FILES += \
 
 # Contexthub
 PRODUCT_COPY_FILES += \
+    $(LOCAL_PATH)/rootdir/etc/android.hardware.contexthub-service.qmi.rc:$(TARGET_COPY_OUT_VENDOR)/etc/init/android.hardware.contexthub-service.qmi.rc \
     frameworks/native/data/etc/android.hardware.context_hub.xml:$(TARGET_COPY_OUT_ODM)/etc/permissions/android.hardware.context_hub.xml
 
 # Display
