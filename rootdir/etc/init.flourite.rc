@@ -21,8 +21,16 @@ on boot
     chown system system /sys/class/touch/touch_dev/gesture_double_tap_enabled
     chmod 0660 /sys/class/touch/touch_dev/gesture_double_tap_enabled
 
-    # Lineage Health charging-control access.
-    chown system system /sys/class/power_supply/battery/charge_control_limit
+
+# The qcom-battery class is registered by a late-loaded kernel module, after
+# the boot action has already run. Grant Lineage Health access once Android
+# has completed booting; its HAL uses an explicit node and can register before
+# the node becomes writable.
+on property:sys.boot_completed=1
+    chown system system /sys/class/qcom-battery/input_suspend
+    chmod 0660 /sys/class/qcom-battery/input_suspend
+    chown system system /sys/class/qcom-battery/fastcharge_enable
+    chmod 0660 /sys/class/qcom-battery/fastcharge_enable
 
 # Keep the source audio HAL connected to the ultrasound proximity HAL.
 service vendor.audio-hal /vendor/bin/hw/android.hardware.audio.service
