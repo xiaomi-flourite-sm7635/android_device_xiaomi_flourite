@@ -9,11 +9,13 @@
 #include <fcntl.h>
 #include <linux/fs.h>
 #include <linux/reboot.h>
+#include <limits.h>
 #include <signal.h>
 #include <stdarg.h>
 #include <stdbool.h>
 #include <stdint.h>
 #include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
 #include <sys/ioctl.h>
 #include <sys/stat.h>
@@ -32,11 +34,16 @@
 #define OOPS_HEADER_SIZE 4096ULL
 #define MTDOOPS_MAGIC_V1 UINT32_C(0x5d005d00)
 #define MTDOOPS_MAGIC_V2 UINT32_C(0x5d005e00)
-#define PERSISTENT_MARKER "FLOURITE_FIRST_STAGE_DIAG_V5"
+#define PERSISTENT_MARKER "FLOURITE_FIRST_STAGE_DIAG_V6"
+#define EARLY_OOPS_NODE ".flourite-first-stage-oops"
 
 static int kmsg_fd = -1;
 static int kmsg_read_fd = -1;
 static int oops_fd = -1;
+static int proc_root_fd = -1;
+static int dev_root_fd = -1;
+static int sys_class_block_fd = -1;
+static int sys_dev_block_fd = -1;
 static uint64_t oops_record_base;
 static uint64_t oops_write_offset;
 static uint32_t oops_sequence;
@@ -68,13 +75,14 @@ static void Log(const char *format, ...) {
   (void)write(kmsg_fd, message, length);
 }
 
-static ssize_t ReadSmallFile(const char *path, char *buffer, size_t capacity) {
+static ssize_t ReadSmallFileAt(int directory_fd, const char *path, char *buffer,
+                               size_t capacity) {
   if (capacity < 2) {
     errno = EINVAL;
     return -1;
   }
 
-  int fd = open(path, O_RDONLY | O_CLOEXEC);
+  int fd = openat(directory_fd, path, O_RDONLY | O_CLOEXEC);
   if (fd == -1) {
     return -1;
   }
@@ -131,8 +139,9 @@ static bool WriteAllAt(int fd, const void *buffer, size_t length,
   return true;
 }
 
-static int TryOpenOopsDevice(const char *path, uint64_t *partition_size) {
-  int fd = open(path, O_RDWR | O_CLOEXEC);
+static int TryOpenOopsDeviceAt(int directory_fd, const char *path,
+                               uint64_t *partition_size) {
+  int fd = openat(directory_fd, path, O_RDWR | O_CLOEXEC);
   if (fd == -1) {
     return -1;
   }
@@ -145,9 +154,18 @@ static int TryOpenOopsDevice(const char *path, uint64_t *partition_size) {
   }
 
   char uevent_path[128];
-  int path_length = snprintf(
-      uevent_path, sizeof(uevent_path), "/sys/dev/block/%u:%u/uevent",
-      (unsigned int)major(info.st_rdev), (unsigned int)minor(info.st_rdev));
+  int validation_root = sys_dev_block_fd;
+  int path_length;
+  if (validation_root >= 0) {
+    path_length = snprintf(uevent_path, sizeof(uevent_path), "%u:%u/uevent",
+                           (unsigned int)major(info.st_rdev),
+                           (unsigned int)minor(info.st_rdev));
+  } else {
+    validation_root = AT_FDCWD;
+    path_length = snprintf(
+        uevent_path, sizeof(uevent_path), "/sys/dev/block/%u:%u/uevent",
+        (unsigned int)major(info.st_rdev), (unsigned int)minor(info.st_rdev));
+  }
   if (path_length < 0 || (size_t)path_length >= sizeof(uevent_path)) {
     close(fd);
     errno = ENAMETOOLONG;
@@ -157,7 +175,8 @@ static int TryOpenOopsDevice(const char *path, uint64_t *partition_size) {
   char uevent[4096];
   // Never trust the fallback block-node number by itself. Variants may assign
   // UFS partitions differently, so the kernel's GPT name must also match.
-  if (ReadSmallFile(uevent_path, uevent, sizeof(uevent)) < 0 ||
+  if (ReadSmallFileAt(validation_root, uevent_path, uevent, sizeof(uevent)) <
+          0 ||
       !HasExactLine(uevent, "PARTNAME=oops")) {
     close(fd);
     errno = ENODEV;
@@ -176,10 +195,123 @@ static int TryOpenOopsDevice(const char *path, uint64_t *partition_size) {
   return fd;
 }
 
+static int TryOpenOopsDevice(const char *path, uint64_t *partition_size) {
+  return TryOpenOopsDeviceAt(AT_FDCWD, path, partition_size);
+}
+
+static bool ParseDeviceNumber(const char *text, dev_t *device_number) {
+  char *separator = NULL;
+  errno = 0;
+  unsigned long major_number = strtoul(text, &separator, 10);
+  if (errno != 0 || separator == text || *separator != ':' ||
+      major_number > UINT_MAX) {
+    return false;
+  }
+
+  char *end = NULL;
+  const char *minor_text = separator + 1;
+  errno = 0;
+  unsigned long minor_number = strtoul(minor_text, &end, 10);
+  if (errno != 0 || end == minor_text || minor_number > UINT_MAX) {
+    return false;
+  }
+  while (*end == '\n' || *end == '\r' || *end == ' ' || *end == '\t') {
+    ++end;
+  }
+  if (*end != '\0') {
+    return false;
+  }
+
+  dev_t parsed = makedev((unsigned int)major_number,
+                         (unsigned int)minor_number);
+  if ((unsigned long)major(parsed) != major_number ||
+      (unsigned long)minor(parsed) != minor_number) {
+    return false;
+  }
+  *device_number = parsed;
+  return true;
+}
+
+static int TryOpenEarlyOopsDevice(int block_directory_fd,
+                                  const char *block_name,
+                                  uint64_t *partition_size,
+                                  char *selected_path,
+                                  size_t selected_path_size) {
+  if (dev_root_fd < 0) {
+    errno = ENOENT;
+    return -1;
+  }
+
+  char dev_attribute[256];
+  int length = snprintf(dev_attribute, sizeof(dev_attribute), "%s/dev",
+                        block_name);
+  if (length < 0 || (size_t)length >= sizeof(dev_attribute)) {
+    errno = ENAMETOOLONG;
+    return -1;
+  }
+
+  char device_text[64];
+  if (ReadSmallFileAt(block_directory_fd, dev_attribute, device_text,
+                      sizeof(device_text)) < 0) {
+    return -1;
+  }
+
+  dev_t device_number;
+  if (!ParseDeviceNumber(device_text, &device_number)) {
+    errno = EINVAL;
+    return -1;
+  }
+
+  bool created = false;
+  struct stat existing;
+  if (fstatat(dev_root_fd, EARLY_OOPS_NODE, &existing,
+              AT_SYMLINK_NOFOLLOW) == 0) {
+    if (!S_ISBLK(existing.st_mode) || existing.st_rdev != device_number) {
+      errno = EEXIST;
+      return -1;
+    }
+  } else if (errno == ENOENT) {
+    if (mknodat(dev_root_fd, EARLY_OOPS_NODE, S_IFBLK | 0600,
+                device_number) != 0) {
+      return -1;
+    }
+    created = true;
+  } else {
+    return -1;
+  }
+
+  int fd =
+      TryOpenOopsDeviceAt(dev_root_fd, EARLY_OOPS_NODE, partition_size);
+  int saved_errno = errno;
+  if (created && unlinkat(dev_root_fd, EARLY_OOPS_NODE, 0) != 0) {
+    Log("failed to unlink private oops node: %s", strerror(errno));
+  }
+  errno = saved_errno;
+
+  if (fd >= 0) {
+    (void)snprintf(selected_path, selected_path_size,
+                   "/dev/%s (sysfs %s)", EARLY_OOPS_NODE, block_name);
+  }
+  return fd;
+}
+
 static int ScanForOopsDevice(uint64_t *partition_size, char *selected_path,
                              size_t selected_path_size) {
-  DIR *directory = opendir("/sys/class/block");
+  int block_directory_fd;
+  if (sys_class_block_fd >= 0) {
+    block_directory_fd = openat(sys_class_block_fd, ".",
+                                O_RDONLY | O_DIRECTORY | O_CLOEXEC);
+  } else {
+    block_directory_fd =
+        open("/sys/class/block", O_RDONLY | O_DIRECTORY | O_CLOEXEC);
+  }
+  if (block_directory_fd < 0) {
+    return -1;
+  }
+
+  DIR *directory = fdopendir(block_directory_fd);
   if (directory == NULL) {
+    close(block_directory_fd);
     return -1;
   }
 
@@ -192,13 +324,14 @@ static int ScanForOopsDevice(uint64_t *partition_size, char *selected_path,
 
     char uevent_path[256];
     int length = snprintf(uevent_path, sizeof(uevent_path),
-                          "/sys/class/block/%s/uevent", entry->d_name);
+                          "%s/uevent", entry->d_name);
     if (length < 0 || (size_t)length >= sizeof(uevent_path)) {
       continue;
     }
 
     char uevent[4096];
-    if (ReadSmallFile(uevent_path, uevent, sizeof(uevent)) < 0 ||
+    if (ReadSmallFileAt(dirfd(directory), uevent_path, uevent,
+                        sizeof(uevent)) < 0 ||
         !HasExactLine(uevent, "PARTNAME=oops")) {
       continue;
     }
@@ -213,6 +346,13 @@ static int ScanForOopsDevice(uint64_t *partition_size, char *selected_path,
     selected_fd = TryOpenOopsDevice(device_path, partition_size);
     if (selected_fd >= 0) {
       (void)snprintf(selected_path, selected_path_size, "%s", device_path);
+      break;
+    }
+
+    selected_fd = TryOpenEarlyOopsDevice(
+        dirfd(directory), entry->d_name, partition_size, selected_path,
+        selected_path_size);
+    if (selected_fd >= 0) {
       break;
     }
   }
@@ -342,7 +482,7 @@ static void UpdatePersistentHeader(const char *status, int elapsed) {
   (void)snprintf((char *)header + sizeof(struct MtdOopsHeader),
                  sizeof(header) - sizeof(struct MtdOopsHeader),
                  PERSISTENT_MARKER
-                 "\nversion=5\nstatus=%s\nelapsed_seconds=%d\n"
+                 "\nversion=6\nstatus=%s\nelapsed_seconds=%d\n"
                  "record_index=%u\nsequence=%u\nlog_bytes=%llu\n"
                  "truncated=%d\nsecond_stage_seen=%d\n",
                  status, elapsed, oops_record_index, oops_sequence,
@@ -405,7 +545,7 @@ static bool InitializePersistentLog(void) {
   oops_write_offset = OOPS_HEADER_SIZE;
   oops_log_truncated = false;
   UpdatePersistentHeader("initializing", 0);
-  PersistentAppendString("\n--- FLOURITE V5 KMSG BEGIN ---\n");
+  PersistentAppendString("\n--- FLOURITE V6 KMSG BEGIN ---\n");
   Log("persistent logger attached to %s, size=%llu, record=%u, sequence=%u",
       selected_path, (unsigned long long)partition_size, oops_record_index,
       oops_sequence);
@@ -467,8 +607,9 @@ static void SyncPersistentLog(const char *status, int elapsed) {
   }
 }
 
-static void DumpFile(const char *label, const char *path, size_t limit) {
-  int fd = open(path, O_RDONLY | O_CLOEXEC);
+static void DumpFileAt(const char *label, int directory_fd, const char *path,
+                       size_t limit) {
+  int fd = openat(directory_fd, path, O_RDONLY | O_CLOEXEC);
   if (fd == -1) {
     Log("%s unavailable: %s", label, strerror(errno));
     return;
@@ -497,6 +638,10 @@ static void DumpFile(const char *label, const char *path, size_t limit) {
     Log("%s: %s", label, buffer);
   }
   close(fd);
+}
+
+static void DumpFile(const char *label, const char *path, size_t limit) {
+  DumpFileAt(label, AT_FDCWD, path, limit);
 }
 
 static void DumpDirectory(const char *path, size_t limit) {
@@ -541,15 +686,21 @@ static void DumpDirectory(const char *path, size_t limit) {
   closedir(directory);
 }
 
-static void DumpLink(const char *label, const char *path) {
+static void DumpLinkAt(const char *label, int directory_fd,
+                       const char *path) {
   char target[512];
-  ssize_t length = readlink(path, target, sizeof(target) - 1);
+  ssize_t length =
+      readlinkat(directory_fd, path, target, sizeof(target) - 1);
   if (length < 0) {
     Log("%s unavailable: %s", label, strerror(errno));
     return;
   }
   target[length] = '\0';
   Log("%s: %s", label, target);
+}
+
+static void DumpLink(const char *label, const char *path) {
+  DumpLinkAt(label, AT_FDCWD, path);
 }
 
 static bool IsNumericName(const char *name) {
@@ -566,8 +717,19 @@ static bool IsNumericName(const char *name) {
 }
 
 static bool ProcessExists(const char *wanted_name) {
-  DIR *proc = opendir("/proc");
+  int scan_fd;
+  if (proc_root_fd >= 0) {
+    scan_fd = openat(proc_root_fd, ".", O_RDONLY | O_DIRECTORY | O_CLOEXEC);
+  } else {
+    scan_fd = open("/proc", O_RDONLY | O_DIRECTORY | O_CLOEXEC);
+  }
+  if (scan_fd < 0) {
+    return false;
+  }
+
+  DIR *proc = fdopendir(scan_fd);
   if (proc == NULL) {
+    close(scan_fd);
     return false;
   }
 
@@ -579,13 +741,12 @@ static bool ProcessExists(const char *wanted_name) {
     }
 
     char path[128];
-    int path_length =
-        snprintf(path, sizeof(path), "/proc/%s/comm", entry->d_name);
+    int path_length = snprintf(path, sizeof(path), "%s/comm", entry->d_name);
     if (path_length < 0 || (size_t)path_length >= sizeof(path)) {
       continue;
     }
 
-    int fd = open(path, O_RDONLY | O_CLOEXEC);
+    int fd = openat(dirfd(proc), path, O_RDONLY | O_CLOEXEC);
     if (fd == -1) {
       continue;
     }
@@ -614,20 +775,73 @@ static bool ProcessExists(const char *wanted_name) {
 
 static void DumpState(const char *phase) {
   Log("state snapshot: %s", phase);
-  DumpLink("pid1-exe", "/proc/1/exe");
-  DumpFile("pid1-wchan", "/proc/1/wchan", 512);
-  DumpFile("pid1-stack", "/proc/1/stack", 8192);
-  DumpFile("pid1-status", "/proc/1/status", 8192);
-  DumpFile("mounts", "/proc/mounts", 16384);
-  DumpFile("modules", "/proc/modules", 32768);
+  if (proc_root_fd >= 0) {
+    DumpLinkAt("pid1-exe", proc_root_fd, "1/exe");
+    DumpFileAt("pid1-wchan", proc_root_fd, "1/wchan", 512);
+    DumpFileAt("pid1-stack", proc_root_fd, "1/stack", 8192);
+    DumpFileAt("pid1-status", proc_root_fd, "1/status", 8192);
+    DumpFileAt("mounts", proc_root_fd, "mounts", 16384);
+    DumpFileAt("modules", proc_root_fd, "modules", 32768);
+  } else {
+    DumpLink("pid1-exe", "/proc/1/exe");
+    DumpFile("pid1-wchan", "/proc/1/wchan", 512);
+    DumpFile("pid1-stack", "/proc/1/stack", 8192);
+    DumpFile("pid1-status", "/proc/1/status", 8192);
+    DumpFile("mounts", "/proc/mounts", 16384);
+    DumpFile("modules", "/proc/modules", 32768);
+  }
   DumpDirectory("/dev/block/mapper", 128);
   DumpDirectory("/dev/block/by-name", 192);
   DumpDirectory("/dev/block/bootdevice/by-name", 192);
 }
 
 static bool SecondStageStarted(void) {
+  if (proc_root_fd >= 0) {
+    char target[256];
+    ssize_t length =
+        readlinkat(proc_root_fd, "1/exe", target, sizeof(target) - 1);
+    if (length >= 0) {
+      target[length] = '\0';
+      if (strcmp(target, "/system/bin/init") == 0) {
+        return true;
+      }
+    }
+  }
+
   struct stat info;
   return stat("/dev/socket/property_service", &info) == 0;
+}
+
+static void OpenPreservedNamespaceFds(void) {
+  proc_root_fd = open("/proc", O_RDONLY | O_DIRECTORY | O_CLOEXEC);
+  dev_root_fd = open("/dev", O_RDONLY | O_DIRECTORY | O_CLOEXEC);
+  sys_class_block_fd =
+      open("/sys/class/block", O_RDONLY | O_DIRECTORY | O_CLOEXEC);
+  sys_dev_block_fd =
+      open("/sys/dev/block", O_RDONLY | O_DIRECTORY | O_CLOEXEC);
+
+  if (proc_root_fd < 0 || dev_root_fd < 0 || sys_class_block_fd < 0 ||
+      sys_dev_block_fd < 0) {
+    Log("preserved namespace fds: proc=%d dev=%d class-block=%d dev-block=%d",
+        proc_root_fd, dev_root_fd, sys_class_block_fd, sys_dev_block_fd);
+  }
+}
+
+static void ClosePreservedNamespaceFds(void) {
+  int *const descriptors[] = {
+      &proc_root_fd,
+      &dev_root_fd,
+      &sys_class_block_fd,
+      &sys_dev_block_fd,
+  };
+
+  for (size_t index = 0;
+       index < sizeof(descriptors) / sizeof(descriptors[0]); ++index) {
+    if (*descriptors[index] >= 0) {
+      close(*descriptors[index]);
+      *descriptors[index] = -1;
+    }
+  }
 }
 
 static bool RecoveryMode(void) {
@@ -673,10 +887,11 @@ int main(void) {
 
   bool recovery_mode = RecoveryMode();
   if (!recovery_mode) {
+    OpenPreservedNamespaceFds();
     PrepareKernelLogReader();
   }
 
-  Log("diagnostic hook V5 started, pid=%d", getpid());
+  Log("diagnostic hook V6 started, pid=%d", getpid());
   DumpFile("cmdline", "/proc/cmdline", 16384);
   DumpFile("bootconfig", "/proc/bootconfig", 32768);
   DumpState("before first-stage mounts");
@@ -704,6 +919,7 @@ int main(void) {
     if (kmsg_read_fd >= 0) {
       close(kmsg_read_fd);
     }
+    ClosePreservedNamespaceFds();
     close(kmsg_fd);
     return 1;
   }
@@ -726,6 +942,7 @@ int main(void) {
     if (kmsg_read_fd >= 0) {
       close(kmsg_read_fd);
     }
+    ClosePreservedNamespaceFds();
     close(kmsg_fd);
     return 0;
   }
@@ -754,7 +971,7 @@ int main(void) {
     sleep(1);
     DrainKernelLog();
     if (!second_stage_logged && SecondStageStarted()) {
-      Log("second-stage property service detected after %d seconds", elapsed);
+      Log("second-stage init detected after %d seconds", elapsed);
       second_stage_logged = true;
       SyncPersistentLog("second-stage-seen", elapsed);
     }
@@ -767,6 +984,7 @@ int main(void) {
       if (kmsg_read_fd >= 0) {
         close(kmsg_read_fd);
       }
+      ClosePreservedNamespaceFds();
       close(kmsg_fd);
       _exit(0);
     }
@@ -780,6 +998,7 @@ int main(void) {
       if (kmsg_read_fd >= 0) {
         close(kmsg_read_fd);
       }
+      ClosePreservedNamespaceFds();
       close(kmsg_fd);
       _exit(0);
     }
