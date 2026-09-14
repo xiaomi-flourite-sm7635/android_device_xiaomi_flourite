@@ -108,10 +108,11 @@ TARGET_KERNEL_CONFIG := \
     vendor/pineapple_GKI.config \
     vendor/flourite_GKI.config
 
+# The flourite DTB supplies the complete firmware search path, including
+# /odm/firmware/p16u for the Novatek touchscreen firmware. Do not override it.
 BOARD_KERNEL_CMDLINE := \
     video=vfb:640x400,bpp=32,memsize=3072000 \
     sysctl.kernel.firmware_config.force_sysfs_fallback=1 \
-    firmware_class.path=/vendor/firmware,/vendor/firmware_mnt/image \
     swinfo.fingerprint=flourite:14/OS3.0.304.0.WPRMIXM:user \
     mtdoops.fingerprint=flourite:14/OS3.0.304.0.WPRMIXM:user \
     erofs.reserved_pages=64
