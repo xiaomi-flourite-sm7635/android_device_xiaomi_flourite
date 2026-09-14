@@ -18,3 +18,10 @@ allow hal_touchfeature_xiaomi touchfeature_device:chr_file rw_file_perms;
 # Permit its userspace processor to access only the dedicated touch sysfs ABI.
 allow hal_touchfeature_xiaomi_default sysfs_touch_hostprocess:file rw_file_perms;
 allow hal_touchfeature_xiaomi_default sysfs_touch_suspend:file rw_file_perms;
+
+# Xiaomi's THP userspace stack discovers the physical touchscreen through
+# /dev/input and opens the matching evdev node read-write to report processed
+# touch points back through the input subsystem. Match the stock policy.
+allow hal_touchfeature_xiaomi_default input_device:dir r_dir_perms;
+allow hal_touchfeature_xiaomi_default input_device:chr_file rw_file_perms;
+allow hal_touchfeature_xiaomi_default self:capability sys_nice;
