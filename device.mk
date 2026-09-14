@@ -75,10 +75,12 @@ PRODUCT_PACKAGES += \
     android.hardware.soundtrigger@2.3-impl
 
 PRODUCT_PACKAGES += \
+    audio.primary.volcano \
     audioadsprpcd \
     audio.bluetooth.default \
     audio.r_submix.default \
-    audio.usb.default
+    audio.usb.default \
+    sound_trigger.primary.volcano
 
 PRODUCT_PACKAGES += \
     lib_bt_aptx \
@@ -101,7 +103,9 @@ PRODUCT_PACKAGES += \
 AUDIO_HAL_DIR := hardware/qcom-caf/sm8650/audio/primary-hal
 
 PRODUCT_COPY_FILES += \
-    $(call find-copy-subdir-files,*,$(LOCAL_PATH)/configs/audio/sku_volcano,$(TARGET_COPY_OUT_VENDOR)/etc/audio/sku_volcano)
+    $(call find-copy-subdir-files,*,$(LOCAL_PATH)/configs/audio/sku_volcano,$(TARGET_COPY_OUT_VENDOR)/etc/audio/sku_volcano) \
+    $(AUDIO_HAL_DIR)/configs/common/audio_policy_configuration.xml:$(TARGET_COPY_OUT_VENDOR)/etc/audio_policy_configuration.xml \
+    $(AUDIO_HAL_DIR)/configs/volcano/audio_policy_configuration.xml:$(TARGET_COPY_OUT_VENDOR)/etc/audio/sku_volcano/audio_policy_configuration.xml
 
 PRODUCT_COPY_FILES += \
     $(LOCAL_PATH)/configs/audio/audio_policy_volumes.xml:$(TARGET_COPY_OUT_VENDOR)/etc/audio_policy_volumes.xml \
@@ -179,6 +183,7 @@ PRODUCT_PACKAGES += \
 
 # Fingerprint
 PRODUCT_COPY_FILES += \
+    $(LOCAL_PATH)/configs/keylayout/uinput-xiaomi.kl:$(TARGET_COPY_OUT_VENDOR)/usr/keylayout/uinput-xiaomi.kl \
     frameworks/native/data/etc/android.hardware.fingerprint.xml:$(TARGET_COPY_OUT_VENDOR)/etc/permissions/android.hardware.fingerprint.xml
 
 # Graphics

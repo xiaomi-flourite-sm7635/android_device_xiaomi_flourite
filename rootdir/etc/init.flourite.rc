@@ -8,6 +8,10 @@
 # init.target.rc files.
 
 on boot
+    # Userdebug starts AOSP's serial shell by default. Keep ADB available, but
+    # do not expose a console on the device UART.
+    stop console
+
     # Lineage's sensor notifier watches these nodes to bridge Xiaomi's
     # non-UI and AOD sensors into the display/touch drivers.
     chown system system /dev/mi_display/disp_feature
@@ -37,7 +41,7 @@ service vendor.audio-hal /vendor/bin/hw/android.hardware.audio.service
     override
     class hal
     user audioserver
-    group audio camera drmrpc inet media mediadrm net_bt net_bt_admin net_bw_acct wakelock context_hub system
+    group audio camera drmrpc inet media mediadrm net_bt net_bt_admin net_bw_acct wakelock context_hub system oem_2901 oem_2912
     capabilities BLOCK_SUSPEND SYS_NICE
     rlimit rtprio 10 10
     ioprio rt 4

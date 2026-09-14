@@ -1,0 +1,8 @@
+# Xiaomi's fingerprint uinput node also exposes Linux BTN_C. Generic.kl maps
+# that scan code to BUTTON_C, causing AOSP to classify the built-in device as
+# a connected game controller. Keep its normal virtual keys and intentionally
+# leave BTN_C unmapped; the fingerprint AIDL HAL reports UDFPS events itself.
+key 102   MOVE_HOME   VIRTUAL
+key 116   POWER       WAKE
+key 139   MENU        VIRTUAL
+key 158   BACK        VIRTUAL
