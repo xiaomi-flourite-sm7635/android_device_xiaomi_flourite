@@ -1782,6 +1782,7 @@ vendor/bin/hw/vendor.qti.camera.provider-service_64
 vendor/bin/hw/vendor.qti.hardware.alarm-service
 vendor/bin/hw/vendor.qti.hardware.capabilityconfigstore@1.0-service
 vendor/bin/hw/vendor.qti.hardware.display.color-service
+vendor/bin/hw/vendor.qti.hardware.display.composer-service;DISABLE_DEPS
 vendor/bin/hw/vendor.qti.hardware.iop@2.0-service
 vendor/bin/hw/vendor.qti.hardware.lights.service
 vendor/bin/hw/vendor.qti.hardware.limits@1.2-service
@@ -2098,6 +2099,7 @@ vendor/etc/init/vendor.qti.diag_userdebug.rc
 vendor/etc/init/vendor.qti.hardware.alarm-service.rc
 vendor/etc/init/vendor.qti.hardware.capabilityconfigstore@1.0-service.rc
 vendor/etc/init/vendor.qti.hardware.display.color-service.rc
+vendor/etc/init/vendor.qti.hardware.display.composer-service.rc:vendor/etc/init/vendor.qti.hardware.display.composer-service_flourite.rc
 vendor/etc/init/vendor.qti.hardware.dsp@1.0-service.rc
 vendor/etc/init/vendor.qti.hardware.iop@2.0-service.rc
 vendor/etc/init/vendor.qti.hardware.lights.service.rc
@@ -2273,6 +2275,7 @@ vendor/etc/vintf/manifest/vendor.qti.diag.hal.service.xml
 vendor/etc/vintf/manifest/vendor.qti.hardware.alarm.xml
 vendor/etc/vintf/manifest/vendor.qti.hardware.data.connectionaidl.xml
 vendor/etc/vintf/manifest/vendor.qti.hardware.data.iwlandata.xml
+vendor/etc/vintf/manifest/vendor.qti.hardware.display.composer-service.xml:vendor/etc/vintf/manifest/vendor.qti.hardware.display.composer-service_flourite.xml
 vendor/etc/vintf/manifest/vendor.qti.hardware.embmssl.xml
 vendor/etc/vintf/manifest/vendor.qti.hardware.lights.service.xml
 vendor/etc/vintf/manifest/vendor.qti.hardware.limits-service.xml
@@ -2688,6 +2691,8 @@ vendor/lib64/libdiag.so
 vendor/lib64/libdiagjni.so
 vendor/lib64/libdigital-dimming.so
 vendor/lib64/libdisp-aba.so
+vendor/lib64/libdisplayconfig.qti.so
+vendor/lib64/libdisplaydebug.so;DISABLE_DEPS
 vendor/lib64/libdisplayfeature.so
 vendor/lib64/libdisplayfeatureservice.so
 vendor/lib64/libdisplayqos.so
@@ -2697,6 +2702,7 @@ vendor/lib64/libdpp_manager.so
 vendor/lib64/libdpps.so
 vendor/lib64/libdrmfs.so
 vendor/lib64/libdrmtime.so
+vendor/lib64/libdrmutils.so
 vendor/lib64/libdsd2pcm.so
 vendor/lib64/libdsi_netctrl.so
 vendor/lib64/libdsutils.so
@@ -2710,6 +2716,7 @@ vendor/lib64/libfastcvdsp_stub.so
 vendor/lib64/libfastcvopt.so
 vendor/lib64/libfastmessage.so
 vendor/lib64/libfeutils.so
+vendor/lib64/libfilefinder.so
 vendor/lib64/libfmpal.so
 vendor/lib64/libgame_enhance.so
 vendor/lib64/libgamepoweroptfeature.so
@@ -2719,7 +2726,11 @@ vendor/lib64/libgnss.so
 vendor/lib64/libgnsspps.so
 vendor/lib64/libgps.utils.so
 vendor/lib64/libgpt.so
+vendor/lib64/libgpu_tonemapper.so
 vendor/lib64/libgpudataproducer.so
+vendor/lib64/libgralloc.qti.so
+vendor/lib64/libgralloccore.so
+vendor/lib64/libgrallocutils.so
 vendor/lib64/libgsl.so
 vendor/lib64/libhdcp1prov.so
 vendor/lib64/libhdcp2p2prov.so
@@ -2732,6 +2743,7 @@ vendor/lib64/libhdrdynamic.so
 vendor/lib64/libhdrdynamicootf.so
 vendor/lib64/libhdrvivid.so
 vendor/lib64/libhfp_pal.so
+vendor/lib64/libhistogram.so
 vendor/lib64/libhme.so
 vendor/lib64/libhotword_intf.so
 vendor/lib64/libiccprofile.so
@@ -2910,12 +2922,14 @@ vendor/lib64/libqcrilNrVoiceModule.so
 vendor/lib64/libqcrildataaidl.so
 vendor/lib64/libqcrildatactl.so
 vendor/lib64/libqcrildataqos.so
+vendor/lib64/libqdMetaData.so
 vendor/lib64/libqdcm-algo.so
 vendor/lib64/libqdcm-json-mode-parser.so
 vendor/lib64/libqdcm-mode-parser.so
 vendor/lib64/libqdi.so
 vendor/lib64/libqdp.so
 vendor/lib64/libqdpr.so
+vendor/lib64/libqdutils.so
 vendor/lib64/libqesdk2_0.so
 vendor/lib64/libqesdk_manager.so
 vendor/lib64/libqesdoem_query_sys.so
@@ -2940,6 +2954,7 @@ vendor/lib64/libqrtr.so
 vendor/lib64/libqrtrclient.so
 vendor/lib64/libqseed3.so
 vendor/lib64/libqsegnet.so
+vendor/lib64/libqservice.so
 vendor/lib64/libqsh.so
 vendor/lib64/libqsh_ble_pb.so
 vendor/lib64/libqshcamera.so
@@ -2969,10 +2984,14 @@ vendor/lib64/libscveCommon_stub.so
 vendor/lib64/libscveObjectSegmentation.so
 vendor/lib64/libscveObjectTracker.so
 vendor/lib64/libscveObjectTracker_stub.so
+vendor/lib64/libsdedrm.so
 vendor/lib64/libsdm-color.so
 vendor/lib64/libsdm-colormgr-algo.so
 vendor/lib64/libsdm-disp-vndapis.so
+vendor/lib64/libsdmcore.so
+vendor/lib64/libsdmdal.so
 vendor/lib64/libsdmextension.so
+vendor/lib64/libsdmutils.so
 vendor/lib64/libsdsprpc.so
 vendor/lib64/libsensorcal.so
 vendor/lib64/libsensorndkbridge.so:vendor/lib64/libsensorndkbridge_sensors_v2.so;TRYSRCFIRST;FIX_SONAME

@@ -15,6 +15,11 @@ UAPI header generation and development, but is not yet ABI-compatible with the
 complete stock module set.  Set `FLOURITE_BUILD_KERNEL_FROM_SOURCE=true` only
 for source-kernel compile testing.
 
+The display composer, SDM core/DAL/utilities and gralloc userspace libraries
+are also kept together from that Xiaomi release. These components exchange
+private C++ structures and must remain an ABI-matched set; Android's stable
+graphics AIDL interfaces and the allocator/demura services remain source-built.
+
 Initial build validation covers `init_boot`, `recovery`, `vendor`, `odm`,
 `vendor_dlkm` and `system_dlkm` images.  On-device boot and hardware validation
 are still required before this tree can be considered release-ready.

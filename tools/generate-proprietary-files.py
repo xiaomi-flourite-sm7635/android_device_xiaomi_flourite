@@ -176,7 +176,6 @@ SOURCE_OWNED_FILES = {
     "vendor/bin/init.qti.display_boot.sh",
     "vendor/bin/init.qti.media.sh",
     "vendor/bin/hw/vendor.qti.hardware.display.allocator-service",
-    "vendor/bin/hw/vendor.qti.hardware.display.composer-service",
     "vendor/bin/hw/vendor.qti.hardware.display.demura-service",
     "vendor/etc/audio_policy_volumes.xml",
     "vendor/etc/bluetooth_qti_hearing_aid_audio_policy_configuration.xml",
@@ -195,7 +194,6 @@ SOURCE_OWNED_FILES = {
     "vendor/etc/init/init.qti.display_boot.rc",
     "vendor/etc/init/init.qti.media.rc",
     "vendor/etc/init/vendor.qti.hardware.display.allocator-service.rc",
-    "vendor/etc/init/vendor.qti.hardware.display.composer-service.rc",
     "vendor/etc/init/vendor.qti.hardware.display.demura-service.rc",
     "vendor/etc/media_codecs_performance_volcano_v0.xml",
     "vendor/etc/media_codecs_performance_volcano_v1.xml",
@@ -211,7 +209,6 @@ SOURCE_OWNED_FILES = {
     "vendor/etc/ueventd.rc",
     "vendor/etc/usecaseKvManager.xml",
     "vendor/etc/vintf/manifest/vendor.qti.hardware.display.allocator-service.xml",
-    "vendor/etc/vintf/manifest/vendor.qti.hardware.display.composer-service.xml",
     "vendor/etc/vintf/manifest/vendor.qti.hardware.display.demura-service.xml",
     "vendor/etc/wifi/p2p_supplicant_overlay.conf",
     "vendor/etc/wifi/qca6750/WCNSS_qcom_cfg.ini",
@@ -272,28 +269,12 @@ SOURCE_OWNED_BASENAMES = {
     "android.hardware.graphics.mapper@4.0-impl-qti-display.so",
     "libcamera2ndk_vendor.so",
     "libcld80211.so",
-    "libdisplayconfig.qti.so",
     "libdisplayconfig.system.qti.so",
-    "libdisplaydebug.so",
-    "libdrmutils.so",
-    "libfilefinder.so",
-    "libgpu_tonemapper.so",
-    "libgralloc.qti.so",
-    "libgralloccore.so",
-    "libgrallocutils.so",
-    "libhistogram.so",
     "libjson.so",
     "libprotobuf-cpp-full-21.7.so",
     "libprotobuf-cpp-lite-21.7.so",
     "libqti_vndfwk_detect_vendor.so",
-    "libqdMetaData.so",
-    "libqdutils.so",
-    "libqservice.so",
     "librmnetctl.so",
-    "libsdedrm.so",
-    "libsdmcore.so",
-    "libsdmdal.so",
-    "libsdmutils.so",
     "libvmmem.so",
     "libwfdaac_vendor.so",
     "libwpa_client.so",
@@ -342,6 +323,19 @@ TARGETED_VENDOR_PREFIXES = (
 TARGETED_VENDOR_TOKENS = ("flourite", "volcano", "qca6750")
 
 FORCED_REFERENCE_LINES = {
+    # Keep the complete Xiaomi HWC implementation together. The binary and
+    # its private C++ libraries must come from the same release to preserve
+    # their in-memory ABI. Rename config files to avoid source module names.
+    "vendor/bin/hw/vendor.qti.hardware.display.composer-service":
+        "vendor/bin/hw/vendor.qti.hardware.display.composer-service;DISABLE_DEPS",
+    "vendor/etc/init/vendor.qti.hardware.display.composer-service.rc":
+        "vendor/etc/init/vendor.qti.hardware.display.composer-service.rc:"
+        "vendor/etc/init/vendor.qti.hardware.display.composer-service_flourite.rc",
+    "vendor/etc/vintf/manifest/vendor.qti.hardware.display.composer-service.xml":
+        "vendor/etc/vintf/manifest/vendor.qti.hardware.display.composer-service.xml:"
+        "vendor/etc/vintf/manifest/vendor.qti.hardware.display.composer-service_flourite.xml",
+    "vendor/lib64/libdisplaydebug.so":
+        "vendor/lib64/libdisplaydebug.so;DISABLE_DEPS",
     # The stock binary overrides Qualcomm's source-built audioadsprpcd, so it
     # must retain the source module's dependency on the matching init script.
     # The Qualcomm script is byte-identical to the one shipped by flourite.
@@ -416,6 +410,32 @@ EXTRA_STOCK_FILES = (
     "vendor/lib64/com.xiaomi.camhal.extmodel.intent_aware_sys.so",
     "vendor/lib64/vendor.xiaomi.hardware.aidl.intentaware-V1-impl.so",
     "vendor/lib64/vendor.xiaomi.hardware.aidl.intentaware-V1-ndk_platform.so",
+)
+
+# Seed the complete proprietary HWC/SDM side before resolving ELF
+# dependencies. Stable Android graphics interfaces and the source-built
+# allocator/demura services are intentionally not part of this set.
+STOCK_DISPLAY_FILES = (
+    "vendor/bin/hw/vendor.qti.hardware.display.composer-service",
+    "vendor/etc/init/vendor.qti.hardware.display.composer-service.rc",
+    "vendor/etc/vintf/manifest/vendor.qti.hardware.display.composer-service.xml",
+    "vendor/lib64/libdisplayconfig.qti.so",
+    "vendor/lib64/libdisplaydebug.so",
+    "vendor/lib64/libdrmutils.so",
+    "vendor/lib64/libfilefinder.so",
+    "vendor/lib64/libgpu_tonemapper.so",
+    "vendor/lib64/libgralloc.qti.so",
+    "vendor/lib64/libgralloccore.so",
+    "vendor/lib64/libgrallocutils.so",
+    "vendor/lib64/libhistogram.so",
+    "vendor/lib64/libqdMetaData.so",
+    "vendor/lib64/libqdutils.so",
+    "vendor/lib64/libqservice.so",
+    "vendor/lib64/libsdedrm.so",
+    "vendor/lib64/libsdmcore.so",
+    "vendor/lib64/libsdmdal.so",
+    "vendor/lib64/libsdmextension.so",
+    "vendor/lib64/libsdmutils.so",
 )
 
 DONOR_MARKERS = (
@@ -810,6 +830,8 @@ def main() -> None:
     catalog = load_references(stock_root, references, entries, symlinks)
     add_tree(stock_root, "odm", entries, symlinks, automatic=True)
     add_targeted_vendor_files(stock_root, entries, symlinks)
+    for path in STOCK_DISPLAY_FILES:
+        add_path(stock_root, entries, symlinks, path)
     closure_added = close_elf_dependencies(
         stock_root, entries, symlinks, catalog
     )
