@@ -13,3 +13,8 @@ add_service(hal_touchfeature_xiaomi_server, hal_touchfeature_xiaomi_service)
 
 allow hal_touchfeature_xiaomi_default fwk_sensor_hwservice:hwservice_manager find;
 allow hal_touchfeature_xiaomi touchfeature_device:chr_file rw_file_perms;
+
+# The NT38771 runs in Xiaomi Host Touch Polling mode while the panel is on.
+# Permit its userspace processor to access only the dedicated touch sysfs ABI.
+allow hal_touchfeature_xiaomi_default sysfs_touch_hostprocess:file rw_file_perms;
+allow hal_touchfeature_xiaomi_default sysfs_touch_suspend:file rw_file_perms;
