@@ -2509,6 +2509,7 @@ vendor/lib64/hw/android.hardware.bluetooth@1.0-impl-qti.so
 vendor/lib64/hw/android.hardware.bluetooth@1.1-impl-qti.so
 vendor/lib64/hw/android.hardware.gnss@ally-gps-so.so
 vendor/lib64/hw/audio.bluetooth_qti.default.so
+vendor/lib64/hw/audio.primary.volcano.so
 vendor/lib64/hw/camera.qcom.milos.so
 vendor/lib64/hw/camera.qcom.so
 vendor/lib64/hw/com.dsi.ant@1.0-impl.so
