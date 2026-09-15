@@ -12,6 +12,14 @@ soong_namespace {
     ],
 }
 
+prebuilt_etc_xml {
+    name: "manifest_flourite_audio.xml",
+    src: "configs/hidl/manifest_non_qmaa.xml",
+    filename: "manifest_flourite_audio.xml",
+    sub_dir: "vintf/manifest",
+    soc_specific: true,
+}
+
 cc_defaults {
     name: "flourite_first_stage_diag_defaults",
     srcs: ["diagnostics/first_stage_diag.c"],

@@ -70,6 +70,9 @@ PRODUCT_PACKAGES += \
     android.hardware.soundtrigger@2.3-impl
 
 PRODUCT_PACKAGES += \
+    manifest_flourite_audio.xml
+
+PRODUCT_PACKAGES += \
     audioadsprpcd \
     audio.bluetooth.default \
     audio.r_submix.default \
