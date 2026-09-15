@@ -1771,6 +1771,7 @@ vendor/bin/feature_enabler_client
 vendor/bin/fm_qsoc_patches
 vendor/bin/hdcp1prov
 vendor/bin/hdcp2p2prov
+vendor/bin/hw/android.hardware.audio.service_64
 vendor/bin/hw/android.hardware.bluetooth@1.1-service-qti
 vendor/bin/hw/android.hardware.contexthub-service.qmi
 vendor/bin/hw/android.hardware.gatekeeper-service-qti
@@ -2043,6 +2044,7 @@ vendor/etc/gpfspath_oem_config.xml
 vendor/etc/gps.conf
 vendor/etc/gps_diag.cfg
 vendor/etc/init.qti.fm.sh
+vendor/etc/init/android.hardware.audio.service_64.rc
 vendor/etc/init/android.hardware.bluetooth@1.1-service-qti.rc
 vendor/etc/init/android.hardware.drm@1.1-service.wfdhdcp.rc
 vendor/etc/init/android.hardware.gatekeeper-service-qti.rc
@@ -2494,6 +2496,8 @@ vendor/lib64/com.xiaomi.camhal.extmodel.ec_diag_sys.so
 vendor/lib64/com.xiaomi.camhal.extmodel.ec_executor.so
 vendor/lib64/com.xiaomi.camhal.extmodel.intent_aware_sys.so
 vendor/lib64/com.xiaomi.camhal.overlap.so
+vendor/lib64/com.xiaomi.camhal.submodel.camxfrag.so
+vendor/lib64/com.xiaomi.camhal.submodel.chifrag.so
 vendor/lib64/com.xiaomi.immunesystem.bigdata.so
 vendor/lib64/com.xiaomi.immunesystem.client.so
 vendor/lib64/deviceInfoServiceModuleNr.so
@@ -2505,6 +2509,8 @@ vendor/lib64/egl/libVkLayer_ADRENO_qprofiler.so
 vendor/lib64/egl/libq3dtools_adreno.so;SYMLINK=vendor/lib64/libq3dtools_adreno.so
 vendor/lib64/egl/libq3dtools_esx.so
 vendor/lib64/geonebulaIns.so
+vendor/lib64/hw/android.hardware.audio.effect@7.0-impl.so
+vendor/lib64/hw/android.hardware.audio@7.1-impl.so
 vendor/lib64/hw/android.hardware.bluetooth.audio-impl-qti.so
 vendor/lib64/hw/android.hardware.bluetooth@1.0-impl-qti.so
 vendor/lib64/hw/android.hardware.bluetooth@1.1-impl-qti.so

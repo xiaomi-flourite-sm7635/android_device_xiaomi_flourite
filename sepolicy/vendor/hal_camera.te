@@ -12,6 +12,8 @@ allow hal_camera system_server:fd *;
 allow hal_camera_default sysfs_wake_lock:file { open read write };
 allow hal_camera_default self:process execmem;
 allow hal_camera_default self:capability ipc_lock;
+allow hal_camera_default vendor_camlog_device:chr_file { ioctl open read write };
+allow hal_camera_default vendor_miev_device:chr_file { open write };
 allow hal_camera_default proc_pressure_cpu:file { getattr open read write };
 allow hal_camera_default proc_pressure_cpu:file { getattr open read };
 allow hal_camera_default proc_pressure_io:file { getattr open read write };
