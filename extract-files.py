@@ -4,9 +4,6 @@
 # SPDX-License-Identifier: Apache-2.0
 #
 
-from pathlib import Path
-
-from extract_utils.elf import file_needs_lib
 from extract_utils.fixups_blob import (
     BlobFixupCtx,
     File,
@@ -14,6 +11,7 @@ from extract_utils.fixups_blob import (
     blob_fixups_user_type,
 )
 from extract_utils.fixups_lib import (
+    lib_fixup_remove,
     lib_fixups,
     lib_fixups_user_type,
 )
@@ -38,31 +36,6 @@ namespace_imports = [
     'vendor/qcom/opensource/dataservices',
     'vendor/qcom/opensource/display',
 ]
-
-ALLOCATOR_V1 = 'android.hardware.graphics.allocator-V1-ndk.so'
-ALLOCATOR_V2 = 'android.hardware.graphics.allocator-V2-ndk.so'
-
-
-def blob_fixup_allocator_v1_to_v2(
-    ctx: BlobFixupCtx,
-    file: File,
-    file_path: str,
-    *args,
-    **kwargs,
-):
-    if not file_needs_lib(file_path, ALLOCATOR_V1):
-        return
-
-    old = ALLOCATOR_V1.encode()
-    new = ALLOCATOR_V2.encode()
-    with open(file_path, 'rb+') as f:
-        contents = f.read()
-        if old not in contents:
-            return
-        f.seek(0)
-        f.write(contents.replace(old, new))
-        f.truncate()
-
 
 def blob_fixup_graphic_buffer_size(
     ctx: BlobFixupCtx,
@@ -100,6 +73,10 @@ def lib_fixup_vendor_suffix(lib: str, partition: str, *args, **kwargs):
 
 lib_fixups: lib_fixups_user_type = {
     **lib_fixups,
+    # Stock camera blobs intentionally load allocator AIDL V1 alongside V2.
+    # Keep their DT_NEEDED entries untouched, but do not expose V1 through
+    # Soong's dependency graph, which rejects mixed stable AIDL versions.
+    'android.hardware.graphics.allocator-V1-ndk': lib_fixup_remove,
     'sqlite3': lib_fixup_odm_suffix,
     (
         'vendor.qti.diaghal@1.0',
@@ -207,17 +184,9 @@ blob_fixups: blob_fixups_user_type = {
         'odm/lib64/hw/com.qti.chi.override.so',
         'odm/lib64/libchifeature2.so',
     ): blob_fixup()
-        .add_needed('libprocessgroup_shim.so')
-        .replace_needed(
-            'android.hardware.graphics.allocator-V1-ndk.so',
-            'android.hardware.graphics.allocator-V2-ndk.so'
-    ),
+        .add_needed('libprocessgroup_shim.so'),
     'odm/lib64/hw/camera.xiaomi.so': blob_fixup()
         .add_needed('libprocessgroup_shim.so')
-        .replace_needed(
-            'android.hardware.graphics.allocator-V1-ndk.so',
-            'android.hardware.graphics.allocator-V2-ndk.so'
-        )
         .replace_needed(
             'libtinyxml2.so',
             'libtinyxml2-v34.so'
@@ -231,126 +200,7 @@ blob_fixups: blob_fixups_user_type = {
                 '_ZN5mihal9GraBufferC2EPKNS_6StreamEPK13native_handle',
             ],
     ),
-    (
-        'odm/lib64/camera/com.qti.actuator.flourite_aac_imx882_gt9764ber_wide_i_actuator.so',
-        'odm/lib64/camera/com.qti.actuator.flourite_ofilm_imx882_aw86016csr_wide_ii_actuator.so',
-        'odm/lib64/camera/com.qti.actuator.flourite_ofilm_imx882_gt9764ber_wide_iii_actuator.so',
-        'odm/lib64/camera/com.qti.eeprom.flourite_aac_imx355_gt24p64e_ultra_i_eeprom.so',
-        'odm/lib64/camera/com.qti.eeprom.flourite_aac_imx882_gt24p128f_wide_i_eeprom.so',
-        'odm/lib64/camera/com.qti.eeprom.flourite_aac_ov20b40_gt24p64e_front_ii_eeprom.so',
-        'odm/lib64/camera/com.qti.eeprom.flourite_ofilm_imx355_p24c64e_ultra_ii_eeprom.so',
-        'odm/lib64/camera/com.qti.eeprom.flourite_ofilm_imx882_bl24sa128b_wide_ii_eeprom.so',
-        'odm/lib64/camera/com.qti.eeprom.flourite_ofilm_imx882_gt24p128f_wide_iii_eeprom.so',
-        'odm/lib64/camera/com.qti.eeprom.flourite_ofilm_ov20b40_p24c64e_front_eeprom.so',
-        'odm/lib64/camera/com.qti.sensor.flourite_aac_imx355_ultra_i.so',
-        'odm/lib64/camera/com.qti.sensor.flourite_aac_imx882_wide_i.so',
-        'odm/lib64/camera/com.qti.sensor.flourite_ofilm_ov20b40_front.so',
-        'odm/lib64/camera/components/com.jigan.node.videobokeh.so',
-        'odm/lib64/camera/components/com.mi.node.aiasd.so',
-        'odm/lib64/camera/components/com.mi.node.dlengine.so',
-        'odm/lib64/camera/components/com.mi.node.mawsaliency.so',
-        'odm/lib64/camera/components/com.mi.node.skinbeautifier.so',
-        'odm/lib64/camera/components/com.mi.node.videobokeh.so',
-        'odm/lib64/camera/components/com.mi.node.videofilter.so',
-        'odm/lib64/camera/components/com.mi.node.videonight.so',
-        'odm/lib64/camera/components/com.qti.hwcfg.bps.so',
-        'odm/lib64/camera/components/com.qti.hwcfg.ife.so',
-        'odm/lib64/camera/components/com.qti.hwcfg.ipe.so',
-        'odm/lib64/camera/components/com.qti.node.aon.so',
-        'odm/lib64/camera/components/com.qti.node.depth.so',
-        'odm/lib64/camera/components/com.qti.node.depthprovider.so',
-        'odm/lib64/camera/components/com.qti.node.dewarp.so',
-        'odm/lib64/camera/components/com.qti.node.eisv2.so',
-        'odm/lib64/camera/components/com.qti.node.eisv3.so',
-        'odm/lib64/camera/components/com.qti.node.evadepth.so',
-        'odm/lib64/camera/components/com.qti.node.gme.so',
-        'odm/lib64/camera/components/com.qti.node.gyrornn.so',
-        'odm/lib64/camera/components/com.qti.node.hdr10pgen.so',
-        'odm/lib64/camera/components/com.qti.node.hdr10phist.so',
-        'odm/lib64/camera/components/com.qti.node.itofpreprocess.so',
-        'odm/lib64/camera/components/com.qti.node.ml.so',
-        'odm/lib64/camera/components/com.qti.node.mlinference.so',
-        'odm/lib64/camera/components/com.qti.node.pixelstats.so',
-        'odm/lib64/camera/components/com.qti.node.seg.so',
-        'odm/lib64/camera/components/com.qti.node.swec.so',
-        'odm/lib64/camera/components/com.qti.node.swregistration.so',
-        'odm/lib64/camera/components/com.qti.stats.cnndriver.so',
-        'odm/lib64/camera/components/libcamxevainterface.so',
-        'odm/lib64/camera/components/libdepthmapwrapper_itof.so',
-        'odm/lib64/camera/components/libdepthmapwrapper_secure.so',
-        'odm/lib64/camera/libchxlogicalcameratable.so',
-        'odm/lib64/com.qti.camx.chiiqutils.so',
-        'odm/lib64/com.qti.chiusecaseselector.so',
-        'odm/lib64/com.qti.feature2.afbrckt.so',
-        'odm/lib64/com.qti.feature2.demux.so',
-        'odm/lib64/com.qti.feature2.derivedoffline.so',
-        'odm/lib64/com.qti.feature2.fusion.so',
-        'odm/lib64/com.qti.feature2.generic.so',
-        'odm/lib64/com.qti.feature2.gs.sm8650.so',
-        'odm/lib64/com.qti.feature2.hdr.so',
-        'odm/lib64/com.qti.feature2.mcreprocrt.so',
-        'odm/lib64/com.qti.feature2.memcpy.so',
-        'odm/lib64/com.qti.feature2.metadataserializer.so',
-        'odm/lib64/com.qti.feature2.mfsr.so',
-        'odm/lib64/com.qti.feature2.ml.so',
-        'odm/lib64/com.qti.feature2.mux.so',
-        'odm/lib64/com.qti.feature2.offlinestatsregeneration.so',
-        'odm/lib64/com.qti.feature2.qcfa.so',
-        'odm/lib64/com.qti.feature2.rawhdr.so',
-        'odm/lib64/com.qti.feature2.realtimeserializer.so',
-        'odm/lib64/com.qti.feature2.rt.so',
-        'odm/lib64/com.qti.feature2.rtmcx.so',
-        'odm/lib64/com.qti.feature2.serializer.so',
-        'odm/lib64/com.qti.feature2.statsregeneration.so',
-        'odm/lib64/com.qti.feature2.stub.so',
-        'odm/lib64/com.qti.feature2.swmf.so',
-        'odm/lib64/com.qti.qseeutils.so',
-        'odm/lib64/com.qualcomm.mcx.distortionmapper.so',
-        'odm/lib64/com.qualcomm.mcx.linearmapper.so',
-        'odm/lib64/com.qualcomm.mcx.nonlinearmapper.so',
-        'odm/lib64/com.qualcomm.mcx.policy.mfl.so',
-        'odm/lib64/com.qualcomm.qti.mcx.usecase.extension.so',
-        'odm/lib64/com.xiaomi.camx.hook.so',
-        'odm/lib64/com.xiaomi.chi.hook.so',
-        'odm/lib64/hw/camera.qcom.sm8650.so',
-        'odm/lib64/hw/com.qti.chi.offline.so',
-        'odm/lib64/libcamerapostproc.so',
-        'odm/lib64/libcamxhwnodecontext.so',
-        'odm/lib64/libcamxifestriping.so',
-        'odm/lib64/libcamximageformatutils.so',
-        'odm/lib64/libcamxncsdatafactory.so',
-        'odm/lib64/libcom.xiaomi.mawutilsold.so',
-        'odm/lib64/libcommonchiutils.so',
-        'odm/lib64/libfastmessage.so',
-        'odm/lib64/libhme.so',
-        'odm/lib64/libipebpsstriping.so',
-        'odm/lib64/libipebpsstriping170.so',
-        'odm/lib64/libipebpsstriping480.so',
-        'odm/lib64/libisphwsetting.so',
-        'odm/lib64/libjpege.so',
-        'odm/lib64/libmctfengine_stub.so',
-        'odm/lib64/libmfec.so',
-        'odm/lib64/libmmcamera_bestats.so',
-        'odm/lib64/libmmcamera_cac.so',
-        'odm/lib64/libmmcamera_lscv35.so',
-        'odm/lib64/libmmcamera_pdpc.so',
-        'odm/lib64/libofflinefeatureintf.so',
-        'odm/lib64/libopestriping.so',
-        'odm/lib64/libtfestriping.so',
-        'odm/lib64/libubifocus.so',
-        'odm/lib64/vendor.qti.hardware.camera.aon-service-impl.so',
-        'odm/lib64/vendor.qti.hardware.camera.offlinecamera-service-impl.so',
-        'odm/lib64/vendor.qti.hardware.camera.postproc@1.0-service-impl.so',
-    ): blob_fixup()
-        .replace_needed(
-            'android.hardware.graphics.allocator-V1-ndk.so',
-            'android.hardware.graphics.allocator-V2-ndk.so'
-    ),
     'odm/lib64/com.qti.feature2.anchorsync.so': blob_fixup()
-        .replace_needed(
-            'android.hardware.graphics.allocator-V1-ndk.so',
-            'android.hardware.graphics.allocator-V2-ndk.so'
-        )
         .replace_needed(
             'libtinyxml2.so',
             'libtinyxml2-v34.so'
@@ -441,33 +291,6 @@ blob_fixups: blob_fixups_user_type = {
             'libtensorflowlite_c_vendor.so',
     ),
 }  # fmt: skip
-
-# Stock Android 16 camera binaries use allocator AIDL V1. Android 17's camera
-# stack exposes V2, whose library name has the same length and compatible ABI
-# for these clients. The generated sidecar keeps this list tied to the exact
-# flourite stock payload instead of a donor device's camera inventory.
-allocator_v1_file = Path(__file__).with_name('allocator-v1-files.txt')
-allocator_v1_paths = (
-    {
-        line.strip()
-        for line in allocator_v1_file.read_text(encoding='utf-8').splitlines()
-        if line.strip() and not line.lstrip().startswith('#')
-    }
-    if allocator_v1_file.is_file()
-    else set()
-)
-
-for key, fixup in list(blob_fixups.items()):
-    key_paths = (key,) if isinstance(key, str) else key
-    if allocator_v1_paths.intersection(key_paths):
-        fixup.call(blob_fixup_allocator_v1_to_v2, need_tmp_dir=False)
-        allocator_v1_paths.difference_update(key_paths)
-
-for path in sorted(allocator_v1_paths):
-    blob_fixups[path] = blob_fixup().call(
-        blob_fixup_allocator_v1_to_v2,
-        need_tmp_dir=False,
-    )
 
 module = ExtractUtilsModule(
     'flourite',

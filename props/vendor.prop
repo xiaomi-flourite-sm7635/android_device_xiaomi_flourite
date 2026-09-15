@@ -143,7 +143,6 @@ vendor.display.enable_dpps_dynamic_fps=1
 vendor.display.enable_hdr10_gpu_target=1
 vendor.display.enable_optimize_refresh=0
 vendor.display.force_lm_to_fb_config=1
-vendor.display.reserved_writeback_config=1
 vendor.display.scaling_dest_opt_mode=4
 vendor.display.scaling_source_opt_mode=4
 vendor.display.vds_allow_hwc=1
