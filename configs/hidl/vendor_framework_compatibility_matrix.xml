@@ -183,4 +183,28 @@
             <instance>default</instance>
         </interface>
     </hal>
+    <hal format="hidl" optional="true">
+        <name>vendor.qti.sla.service</name>
+        <version>1.0</version>
+        <interface>
+            <name>ISlaService</name>
+            <instance>default</instance>
+        </interface>
+    </hal>
+    <hal format="hidl" optional="true">
+        <name>vendor.xiaomi.hidl.minet</name>
+        <version>1.0</version>
+        <interface>
+            <name>IMiNetService</name>
+            <instance>default</instance>
+        </interface>
+    </hal>
+    <hal format="hidl" optional="true">
+        <name>vendor.xiaomi.hidl.miwill</name>
+        <version>1.0</version>
+        <interface>
+            <name>IMiwillService</name>
+            <instance>default</instance>
+        </interface>
+    </hal>
 </compatibility-matrix>
