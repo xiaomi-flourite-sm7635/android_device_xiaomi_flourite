@@ -257,6 +257,17 @@ blob_fixups: blob_fixups_user_type = {
     'vendor/etc/vintf/manifest/c2_manifest_vendor.xml': blob_fixup()
         .regex_replace('.+DOLBY.+\n', ''),
     (
+        'vendor/bin/poweropt-service',
+        'vendor/lib64/libgamepoweroptfeature.so',
+        'vendor/lib64/liboffscreenpoweroptfeature.so',
+        'vendor/lib64/libpowercore.so',
+        'vendor/lib64/libvideooptfeature.so',
+    ): blob_fixup()
+        .replace_needed(
+            'libtinyxml2.so',
+            'libtinyxml2_1.so'
+        ),
+    (
         'vendor/bin/qcc-vendor',
         'vendor/bin/qms',
         'vendor/bin/xtra-daemon',
