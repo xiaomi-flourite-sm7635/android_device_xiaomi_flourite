@@ -239,6 +239,11 @@ blob_fixups: blob_fixups_user_type = {
         .add_needed('liblog.so'),
     (
         'odm/lib64/libaudioroute_ext.so',
+        'vendor/lib64/libagm.so',
+        'vendor/lib64/libar-pal.so',
+        'vendor/lib64/libfmpal.so',
+        'vendor/lib64/libhfp_pal.so',
+        'vendor/lib64/libkaraokepal.so',
         'vendor/lib64/libmcs.so',
     ): blob_fixup()
         .replace_needed(
