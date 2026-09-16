@@ -1586,8 +1586,8 @@ odm/lib64/camera/zsl/com.xiaomi.zsl.sr.so
 odm/lib64/ese_weaver.so
 odm/lib64/hw/consumerir.qcom.so
 odm/lib64/hw/displayfeature.default.so
-odm/lib64/hw/fingerprint.goodix_fod.so:odm/lib64/hw/fingerprint.goodix_fod.default.so;FIX_SONAME
-odm/lib64/hw/fingerprint.jiiov.so:odm/lib64/hw/fingerprint.jiiov.default.so;FIX_SONAME
+odm/lib64/hw/fingerprint.goodix_fod.so:odm/lib64/hw/fingerprint.goodix_fod.default.so;FIX_SONAME;SYMLINK=odm/lib64/hw/fingerprint.goodix_fod.so
+odm/lib64/hw/fingerprint.jiiov.so:odm/lib64/hw/fingerprint.jiiov.default.so;FIX_SONAME;SYMLINK=odm/lib64/hw/fingerprint.jiiov.so
 odm/lib64/libAncHumanPreviewBokeh.so
 odm/lib64/libAncHumanVideoBokehV4.so
 odm/lib64/libFaceUnlock.so
@@ -2367,6 +2367,13 @@ vendor/lib64/camera/com.qti.eeprom.gt24p128c2csli_imx766.so;DISABLE_CHECKELF
 vendor/lib64/camera/com.qti.eeprom.irs2381c_polar.so;DISABLE_CHECKELF
 vendor/lib64/camera/com.qti.eeprom.truly_cmb433.so;DISABLE_CHECKELF
 vendor/lib64/camera/com.qti.sensorsocmap.socid_map.bin
+vendor/lib64/camera/components/com.mi.node.dlengine.so;DISABLE_CHECKELF
+vendor/lib64/camera/components/com.mi.node.mawcommon.so
+vendor/lib64/camera/components/com.mi.node.mawsaliency.so;DISABLE_CHECKELF
+vendor/lib64/camera/components/com.mi.node.mimovie.so
+vendor/lib64/camera/components/com.mi.node.mioisverify.so
+vendor/lib64/camera/components/com.mi.node.videobokeh.so;DISABLE_CHECKELF
+vendor/lib64/camera/components/com.mi.node.videofilter.so;DISABLE_CHECKELF
 vendor/lib64/camera/components/com.qti.eisv2.so
 vendor/lib64/camera/components/com.qti.eisv3.so
 vendor/lib64/camera/components/com.qti.hvx.addconstant.so
@@ -2392,6 +2399,8 @@ vendor/lib64/camera/components/com.qti.node.gpu.so
 vendor/lib64/camera/components/com.qti.node.gyrornn.so;DISABLE_CHECKELF
 vendor/lib64/camera/components/com.qti.node.hdr10pgen.so;DISABLE_CHECKELF
 vendor/lib64/camera/components/com.qti.node.hdr10phist.so;DISABLE_CHECKELF
+vendor/lib64/camera/components/com.qti.node.hdr10plushist.so
+vendor/lib64/camera/components/com.qti.node.hdr10plusmeta.so
 vendor/lib64/camera/components/com.qti.node.itofpreprocess.so;DISABLE_CHECKELF
 vendor/lib64/camera/components/com.qti.node.memcpy.so
 vendor/lib64/camera/components/com.qti.node.ml.so;DISABLE_CHECKELF
@@ -2437,6 +2446,9 @@ vendor/lib64/camera/components/com.qtistatic.stats.aec.so
 vendor/lib64/camera/components/com.qtistatic.stats.af.so
 vendor/lib64/camera/components/com.qtistatic.stats.awb.so
 vendor/lib64/camera/components/com.qtistatic.stats.pdlib.so
+vendor/lib64/camera/components/com.xiaomi.node.gme.so
+vendor/lib64/camera/components/com.xiaomi.node.misv2.so
+vendor/lib64/camera/components/com.xiaomi.node.misv3.so
 vendor/lib64/camera/components/libdepthmapwrapper_itof.so;DISABLE_CHECKELF
 vendor/lib64/camera/components/libdepthmapwrapper_secure.so;DISABLE_CHECKELF
 vendor/lib64/camera/fdconfigpreview.bin
@@ -2681,6 +2693,7 @@ vendor/lib64/libcom.xiaomi.ecoenginemonitor.so
 vendor/lib64/libcom.xiaomi.eventcallback.so
 vendor/lib64/libcom.xiaomi.grallocutils.so
 vendor/lib64/libcom.xiaomi.ionutils.so
+vendor/lib64/libcom.xiaomi.mawutils.so
 vendor/lib64/libcom.xiaomi.mawutilsold.so;DISABLE_CHECKELF
 vendor/lib64/libcom.xiaomi.metadatautils.so
 vendor/lib64/libcom.xiaomi.pluginutils.so
@@ -2823,8 +2836,10 @@ vendor/lib64/libmfGhostDetection.so
 vendor/lib64/libmfec.so;DISABLE_CHECKELF
 vendor/lib64/libmialgo.so
 vendor/lib64/libmialgo_ai_vision.so
+vendor/lib64/libmialgo_globalsaliency.so
 vendor/lib64/libmialgo_video_colourkeeping.so
 vendor/lib64/libmialgoengine.so
+vendor/lib64/libmibokeh_845_video.so;DISABLE_CHECKELF
 vendor/lib64/libmicamera_adapter.so
 vendor/lib64/libmicamera_aidl_device.so
 vendor/lib64/libmicamera_aidl_provider.so
