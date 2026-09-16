@@ -77,7 +77,10 @@ lib_fixups: lib_fixups_user_type = {
     # Keep their DT_NEEDED entries untouched, but do not expose V1 through
     # Soong's dependency graph, which rejects mixed stable AIDL versions.
     'android.hardware.graphics.allocator-V1-ndk': lib_fixup_remove,
-    'sqlite3': lib_fixup_odm_suffix,
+    (
+        'libjc_keymint_transport.nxp',
+        'sqlite3',
+    ): lib_fixup_odm_suffix,
     (
         'vendor.qti.diaghal@1.0',
         'vendor.qti.hardware.dpmservice@1.0',
@@ -105,11 +108,7 @@ blob_fixups: blob_fixups_user_type = {
             'android.hardware.biometrics.common.util.so',
             'android.hardware.biometrics.common.util_v3.so',
         ),
-    (
-        'odm/bin/hw/android.hardware.security.keymint-service.strongbox-nxp',
-        'odm/lib64/libjc_keymint3.nxp.so',
-        'odm/lib64/libkeymint_empty-nxp.so',
-    ): blob_fixup()
+    'odm/lib64/libkeymint_empty-nxp.so': blob_fixup()
         .replace_needed(
             'lib_android_keymaster_keymint_utils.so',
             'lib_android_keymaster_keymint_utils_V3.so',

@@ -266,7 +266,7 @@ PRODUCT_PACKAGES += \
 
 # Keymint
 PRODUCT_PACKAGES += \
-    android.hardware.security.keymint-service.strongbox-nxp \
+    android.hardware.security.keymint3-service.strongbox.nxp \
     android.hardware.weaver-service.nxp-qti
 
 PRODUCT_PACKAGES += \
@@ -377,6 +377,7 @@ PRODUCT_SOONG_NAMESPACES += \
     $(LOCAL_PATH) \
     hardware/google/interfaces \
     hardware/google/pixel \
+    hardware/nxp/keymint/generic \
     hardware/qcom-caf/common/libqti-perfd-client \
     hardware/xiaomi \
     vendor/qcom/opensource/usb/etc

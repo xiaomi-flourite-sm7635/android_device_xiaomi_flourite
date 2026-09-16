@@ -1,1 +1,3 @@
 get_prop(vendor_hal_keymint_strongbox, boot_status_prop)
+
+wakelock_use(vendor_hal_keymint_strongbox)

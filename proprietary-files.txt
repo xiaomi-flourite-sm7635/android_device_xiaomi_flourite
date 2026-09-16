@@ -18,7 +18,6 @@ odm/bin/headset_detect.sh
 odm/bin/hw/android.hardware.gnss-aidl-service-qti
 odm/bin/hw/android.hardware.gnss-service.hdbdAidl
 odm/bin/hw/android.hardware.nqnfc-service.nxp
-odm/bin/hw/android.hardware.security.keymint-service.strongbox-nxp
 odm/bin/hw/android.hardware.weaver-service.nxp-qti
 odm/bin/hw/mfp-daemon
 odm/bin/hw/mifaced
@@ -901,7 +900,6 @@ odm/etc/hdbd/hdbdsmg_firmware.bin
 odm/etc/hdbd/hdbdsmg_firmware_ver.conf
 odm/etc/init.panel_info.sh
 odm/etc/init/android.hardware.gnss-aidl-service-qti.rc
-odm/etc/init/android.hardware.security.keymint3-service.strongbox.nxp.rc
 odm/etc/init/android.hardware.weaver-service.nxp.rc
 odm/etc/init/device_special.rc
 odm/etc/init/gnss-default.rc
@@ -951,7 +949,6 @@ odm/etc/miperf_app_cfg.xml
 odm/etc/miperf_contable.xml
 odm/etc/miperflock_activity_cfg.xml
 odm/etc/permissions/android.hardware.consumerir.xml
-odm/etc/permissions/android.hardware.hardware_keystore.jc-strongbox-keymint3.nxp.xml
 odm/etc/permissions/android.hardware.location.gps.xml
 odm/etc/permissions/android.hardware.nfc.ese.xml
 odm/etc/permissions/android.hardware.nfc.hce.xml
@@ -1180,8 +1177,6 @@ odm/etc/touch/gameturbotool.json
 odm/etc/usecaseKvManager.xml
 odm/etc/vintf/manifest/AHBF-V3-service.xml
 odm/etc/vintf/manifest/android.hardware.biometrics.face-v3.xml
-odm/etc/vintf/manifest/android.hardware.security.keymint3-service.strongbox.nxp.xml
-odm/etc/vintf/manifest/android.hardware.security.sharedsecret3-service.strongbox.nxp.xml
 odm/etc/vintf/manifest/android.hardware.weaver-service.nxp.xml
 odm/etc/vintf/manifest/fod-aidl.xml
 odm/etc/vintf/manifest/gnss-default.xml:odm/etc/vintf/manifest/flourite-gnss-default.xml;TRYSRCFIRST
@@ -1653,8 +1648,7 @@ odm/lib64/libgf_hal.so
 odm/lib64/libheichal.so
 odm/lib64/libhifills.so
 odm/lib64/libhistprocess.so
-odm/lib64/libjc_keymint3.nxp.so
-odm/lib64/libjc_keymint_transport.nxp.so
+odm/lib64/libjc_keymint_transport.nxp.so;MODULE_SUFFIX=_odm
 odm/lib64/libkeymint_empty-nxp.so
 odm/lib64/libkeymint_empty-thales.so
 odm/lib64/libkeymint_transport_empty-nxp.so
