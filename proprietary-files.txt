@@ -2511,7 +2511,6 @@ vendor/lib64/egl/libq3dtools_adreno.so;SYMLINK=vendor/lib64/libq3dtools_adreno.s
 vendor/lib64/egl/libq3dtools_esx.so
 vendor/lib64/geonebulaIns.so
 vendor/lib64/hw/android.hardware.audio.effect@7.0-impl.so
-vendor/lib64/hw/android.hardware.audio@7.1-impl.so
 vendor/lib64/hw/android.hardware.bluetooth.audio-impl-qti.so
 vendor/lib64/hw/android.hardware.bluetooth@1.0-impl-qti.so
 vendor/lib64/hw/android.hardware.bluetooth@1.1-impl-qti.so
@@ -3332,6 +3331,10 @@ vendor/lib64/vendor.xiaomi.hw.touchfeature-V1-ndk_platform.so
 vendor/lib64/vendor.xiaomi.sensor.camera-V1-ndk.so
 vendor/lib64/vendor.xiaomi.sensor.citsensorservice-V1-ndk.so
 vendor/lib64/xiaomi.system.hypsys.common-V1-ndk.so
+
+# Audio compatibility
+vendor/lib64/android.hardware.audio@7.1-util.so:vendor/lib64/android.hardware.audio@7.1-util-v34.so;TRYSRCFIRST;FIX_SONAME
+vendor/lib64/hw/android.hardware.audio@7.1-impl.so
 
 # System Ext
 system_ext/app/AtFwd2/AtFwd2.apk

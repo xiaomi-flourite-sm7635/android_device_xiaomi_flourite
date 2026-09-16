@@ -143,6 +143,11 @@ blob_fixups: blob_fixups_user_type = {
             'libsensorndkbridge.so',
             'libsensorndkbridge_sensors_v2.so',
         ),
+    'vendor/lib64/hw/android.hardware.audio@7.1-impl.so': blob_fixup()
+        .replace_needed(
+            'android.hardware.audio@7.1-util.so',
+            'android.hardware.audio@7.1-util-v34.so',
+        ),
     'vendor/lib64/libsensorndkbridge_sensors_v2.so': blob_fixup()
         .replace_needed(
             'android.frameworks.sensorservice-V1-ndk.so',
