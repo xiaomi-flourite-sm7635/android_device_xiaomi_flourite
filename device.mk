@@ -269,6 +269,9 @@ PRODUCT_PACKAGES += \
     android.hardware.security.keymint3-service.strongbox.nxp \
     android.hardware.weaver-service.nxp-qti
 
+PRODUCT_COPY_FILES += \
+    $(LOCAL_PATH)/rootdir/etc/zz.flourite.strongbox.rc:$(TARGET_COPY_OUT_VENDOR)/etc/init/zz.flourite.strongbox.rc
+
 PRODUCT_PACKAGES += \
     android.hardware.hardware_keystore_V3.xml
 
