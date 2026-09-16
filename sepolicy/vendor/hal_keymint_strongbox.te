@@ -1,3 +1,6 @@
 get_prop(vendor_hal_keymint_strongbox, boot_status_prop)
 
+# The Android 17 NXP transport talks to the native OMAPI service directly.
+binder_call(vendor_hal_keymint_strongbox, omapi)
+
 wakelock_use(vendor_hal_keymint_strongbox)
