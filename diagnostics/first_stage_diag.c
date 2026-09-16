@@ -34,7 +34,7 @@
 #define OOPS_HEADER_SIZE 4096ULL
 #define MTDOOPS_MAGIC_V1 UINT32_C(0x5d005d00)
 #define MTDOOPS_MAGIC_V2 UINT32_C(0x5d005e00)
-#define PERSISTENT_MARKER "FLOURITE_FIRST_STAGE_DIAG_V9"
+#define PERSISTENT_MARKER "FLOURITE_FIRST_STAGE_DIAG_V10"
 #define EARLY_OOPS_NODE ".flourite-first-stage-oops"
 
 static int kmsg_fd = -1;
@@ -50,6 +50,8 @@ static uint32_t oops_sequence;
 static unsigned int oops_record_index;
 static bool oops_log_truncated;
 static bool second_stage_logged;
+static bool adbd_logged;
+static bool system_server_logged;
 static bool direct_persistent_log;
 static bool direct_persistent_log_write;
 
@@ -560,7 +562,7 @@ static bool InitializePersistentLog(void) {
   oops_write_offset = OOPS_HEADER_SIZE;
   oops_log_truncated = false;
   UpdatePersistentHeader("initializing", 0);
-  PersistentAppendString("\n--- FLOURITE V9 KMSG BEGIN ---\n");
+  PersistentAppendString("\n--- FLOURITE V10 KMSG BEGIN ---\n");
   Log("persistent logger attached to %s, size=%llu, record=%u, sequence=%u",
       selected_path, (unsigned long long)partition_size, oops_record_index,
       oops_sequence);
@@ -1084,7 +1086,7 @@ int main(void) {
     PrepareKernelLogReader();
   }
 
-  Log("diagnostic hook V9 started, pid=%d", getpid());
+  Log("diagnostic hook V10 started, pid=%d", getpid());
   DumpFile("cmdline", "/proc/cmdline", 16384);
   DumpFile("bootconfig", "/proc/bootconfig", 32768);
   DumpState("before first-stage mounts");
@@ -1168,39 +1170,24 @@ int main(void) {
       second_stage_logged = true;
       SyncPersistentLog("second-stage-seen", elapsed);
     }
-    if (ProcessExists("adbd")) {
-      Log("adbd detected after %d seconds; watchdog disarmed", elapsed);
-      SyncPersistentLog("disarmed-adbd", elapsed);
-      if (oops_fd >= 0) {
-        close(oops_fd);
-      }
-      if (kmsg_read_fd >= 0) {
-        close(kmsg_read_fd);
-      }
-      ClosePreservedNamespaceFds();
-      close(kmsg_fd);
-      _exit(0);
+    if (!adbd_logged && ProcessExists("adbd")) {
+      Log("adbd detected after %d seconds; capture remains armed", elapsed);
+      adbd_logged = true;
     }
-    if (ProcessExists("system_server")) {
-      Log("system_server detected after %d seconds; watchdog disarmed",
+    if (!system_server_logged && ProcessExists("system_server")) {
+      Log("system_server detected after %d seconds; capture remains armed",
           elapsed);
-      SyncPersistentLog("disarmed-system-server", elapsed);
-      if (oops_fd >= 0) {
-        close(oops_fd);
-      }
-      if (kmsg_read_fd >= 0) {
-        close(kmsg_read_fd);
-      }
-      ClosePreservedNamespaceFds();
-      close(kmsg_fd);
-      _exit(0);
+      system_server_logged = true;
     }
     if (elapsed == 10 || elapsed == 30 || elapsed == 60) {
       char phase[64];
       (void)snprintf(phase, sizeof(phase), "watchdog +%d seconds", elapsed);
       DumpState(phase);
-      SyncPersistentLog("watchdog-active", elapsed);
     }
+    // A fatal PID 1 path waits only five seconds before rebooting to the
+    // configured target. Persist every second so the final LOG(FATAL), service
+    // crash loop and SELinux denial survive that reboot.
+    SyncPersistentLog("watchdog-active", elapsed);
   }
 
   DumpState("watchdog timeout");
