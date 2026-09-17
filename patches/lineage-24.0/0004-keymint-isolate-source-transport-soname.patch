@@ -1,0 +1,118 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: lufrz <314570110+lufrz@users.noreply.github.com>
+Date: Thu, 17 Sep 2026 15:10:00 +0200
+Subject: [PATCH] keymint: isolate source transport from proprietary copies
+
+Some devices retain an ODM KeyMint transport for proprietary Weaver while
+building the newer StrongBox service from source. If both transport variants
+share a SONAME, the vendor StrongBox process can resolve the ODM copy first and
+cross an incompatible C++ class boundary.
+
+Build a second source transport with a distinct runtime name and link source
+KeyMint components against it. Keep the original module for existing source
+consumers and proprietary dependency graphs.
+
+Change-Id: Ic61b2324a07054e2c46e13d896a30a18be8e38e7
+---
+ generic/HAL/Android.bp            |  6 +++---
+ generic/HAL/authsecret/Android.bp |  2 +-
+ generic/KM200/Android.bp          |  4 ++--
+ generic/transport/Android.bp      | 17 +++++++++++++++--
+ 4 files changed, 21 insertions(+), 8 deletions(-)
+
+diff --git a/generic/HAL/Android.bp b/generic/HAL/Android.bp
+index 8de95b7..5b2c487 100644
+--- a/generic/HAL/Android.bp
++++ b/generic/HAL/Android.bp
+@@ -120,10 +120,10 @@ cc_defaults {
+         "liblog",
+         "libcrypto",
+         "libcutils",
+-        "libjc_keymint_transport.nxp",
++        "libjc_keymint_transport.nxp.source",
+         "android.hardware.secure_element-V1-ndk",
+     ],
+-    export_shared_lib_headers: ["libjc_keymint_transport.nxp"],
++    export_shared_lib_headers: ["libjc_keymint_transport.nxp.source"],
+     export_include_dirs: ["."],
+     product_variables: {
+         debuggable: {
+@@ -147,7 +147,7 @@ cc_defaults {
+         "libbinder_ndk",
+         "libcppbor",
+         "libcrypto",
+-        "libjc_keymint_transport.nxp",
++        "libjc_keymint_transport.nxp.source",
+         "libkeymaster_portable",
+         "liblog",
+         "libutils",
+diff --git a/generic/HAL/authsecret/Android.bp b/generic/HAL/authsecret/Android.bp
+index 77e8afd..dd1b042 100644
+--- a/generic/HAL/authsecret/Android.bp
++++ b/generic/HAL/authsecret/Android.bp
+@@ -54,7 +54,7 @@ cc_binary {
+         "libbase",
+         "libbinder_ndk",
+         "android.se.omapi-V1-ndk",
+-        "libjc_keymint_transport.nxp",
++        "libjc_keymint_transport.nxp.source",
+         "libcppbor",
+     ],
+ }
+diff --git a/generic/KM200/Android.bp b/generic/KM200/Android.bp
+index 48520a4..f093924 100644
+--- a/generic/KM200/Android.bp
++++ b/generic/KM200/Android.bp
+@@ -67,7 +67,7 @@ cc_library {
+         "liblog",
+         "libcrypto",
+         "libcutils",
+-        "libjc_keymint_transport.nxp",
++        "libjc_keymint_transport.nxp.source",
+         "libbinder_ndk",
+         "android.hardware.security.keymint-V2-ndk",
+         "android.hardware.security.rkp-V2-ndk",
+@@ -107,7 +107,7 @@ cc_binary {
+         "libcrypto",
+         "libkeymaster_portable",
+         "libjc_keymint.nxp",
+-        "libjc_keymint_transport.nxp",
++        "libjc_keymint_transport.nxp.source",
+         "liblog",
+         "libutils",
+         "libhidlbase",
+diff --git a/generic/transport/Android.bp b/generic/transport/Android.bp
+index af1d8cc..1aac86a 100644
+--- a/generic/transport/Android.bp
++++ b/generic/transport/Android.bp
+@@ -36,8 +36,8 @@ package {
+     ],
+ }
+ 
+-cc_library {
+-    name: "libjc_keymint_transport.nxp",
++cc_defaults {
++    name: "libjc_keymint_transport.nxp.defaults",
+     vendor_available: true,
+     srcs: [
+         "*.cpp",
+@@ -63,3 +63,16 @@ cc_library {
+         "libbinder_ndk",
+     ],
+ }
++
++cc_library {
++    name: "libjc_keymint_transport.nxp",
++    defaults: ["libjc_keymint_transport.nxp.defaults"],
++}
++
++cc_library {
++    // Keep source KeyMint's runtime dependency distinct from proprietary
++    // device copies. A vendor service may otherwise resolve an ABI-incompatible
++    // ODM library with the same SONAME before this one.
++    name: "libjc_keymint_transport.nxp.source",
++    defaults: ["libjc_keymint_transport.nxp.defaults"],
++}
+-- 
+2.53.0
+

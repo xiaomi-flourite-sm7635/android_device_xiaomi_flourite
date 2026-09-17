@@ -12,6 +12,9 @@ git -C hardware/lineage/compat am \
 
 git -C system/sepolicy am \
     ../../device/xiaomi/flourite/patches/lineage-24.0/0003-sepolicy-keep-flourite-first-stage-diagnostics-alive.patch
+
+git -C hardware/nxp/keymint am \
+    ../../../device/xiaomi/flourite/patches/lineage-24.0/0004-keymint-isolate-source-transport-soname.patch
 ```
 
 Patches 0001 and 0003 are needed only while building with
@@ -22,3 +25,8 @@ Patch 0002 fixes the current LineageOS 24 beta split where `AudioSystem` is
 provided by `libaudiobase`, but `libwfdservice_shim` does not link that library
 directly. Drop it once the compatibility project carries the dependency
 upstream.
+
+Patch 0004 gives the source NXP KeyMint transport a distinct SONAME. Flourite
+must retain Xiaomi's ODM transport for the stock Weaver implementation; without
+the split, the source StrongBox service resolves that ABI-incompatible ODM copy
+and crashes with `SIGBUS` before Keystore can finish early boot.
