@@ -3,7 +3,7 @@
 These files are temporary bring-up instrumentation. They are not intended for
 release builds.
 
-The V11 logger must start before the normal `first_stage_console` call, because
+The V12 logger must start before the normal `first_stage_console` call, because
 that call is reached only after kernel-module loading and early block-device
 creation. Apply the matching LineageOS 24 platform patch from the source root:
 
@@ -23,17 +23,20 @@ m bootimage initbootimage recoveryimage vendorbootimage
 
 The flag adds both `androidboot.first_stage_console=1` and
 `androidboot.first_stage_console_early=1`. The latter has no effect without the
-platform patch. V11 keeps the console supervisor's `SIGCHLD` handling isolated
-from first-stage init, so PID 1 can still wait for module-loading and other
-helper processes. Its watchdog snapshots include process and per-thread kernel
-wait channels, stacks and syscalls for the early init, vold and storage path.
-V11 keeps capturing after `adbd` or `system_server` first appear. It polls
+platform patch. The diagnostic flag also adds `printk.devkmsg=on` to the kernel
+command line so first-stage init's fatal messages cannot be discarded by the
+per-open `/dev/kmsg` rate limiter. V12 keeps the console supervisor's `SIGCHLD`
+handling isolated from first-stage init, so PID 1 can still wait for
+module-loading helpers and other child processes. Its watchdog snapshots
+include process and per-thread kernel wait channels, stacks and syscalls for
+the early init, vold and storage path.
+V12 keeps capturing after `adbd` or `system_server` first appear. It polls
 `/dev/kmsg` every 10 ms, commits the record at least every 50 ms, and commits
 immediately after kernel error/fatal records. This is required because PID 1's
 fatal parent may reboot as soon as unwinding completes; only its safety child
-waits five seconds. V11 writes detailed snapshots directly to `oops` so
-`/dev/kmsg` cannot rate-limit them. Normal builds leave the logger and both
-bootconfig parameters out.
+waits five seconds. V12 writes detailed snapshots directly to `oops` so
+`/dev/kmsg` cannot rate-limit them. Normal builds leave the logger, diagnostic
+kernel command line and bootconfig parameters out.
 
 When packaging only boot-chain images over an existing OTA, do not use the
 freshly rebuilt `vbmeta.img`: its `odm`, `vendor`, and `vendor_dlkm` descriptors
