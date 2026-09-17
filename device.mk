@@ -427,7 +427,8 @@ PRODUCT_PACKAGES += \
     telephony-ext
 
 PRODUCT_PACKAGES += \
-    qcrilNrDb_vendor
+    qcrilNrDb_vendor \
+    rfs_msm_mpss_readonly_mbnconfig_symlink
 
 PRODUCT_PACKAGES += \
     xiaomi-telephony-stub
