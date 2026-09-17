@@ -50,6 +50,9 @@ genfscon sysfs /devices/virtual/touch/touch_dev/update_rawdata u:object_r:sysfs_
 genfscon sysfs /devices/virtual/touch/touch_dev/suspend_state u:object_r:sysfs_touch_suspend:s0
 
 # Wakeup
+genfscon sysfs /devices/platform/soc/soc:xiaomi_fingerprint/actpower u:object_r:vendor_sysfs_displayfeature:s0
+genfscon sysfs /devices/platform/soc/soc:xiaomi_fingerprint/fingerdown u:object_r:vendor_sysfs_displayfeature:s0
+genfscon sysfs /devices/platform/soc/soc:xiaomi_fingerprint/intr2 u:object_r:vendor_sysfs_displayfeature:s0
 genfscon sysfs /devices/platform/soc/soc:xiaomi_fingerprint/wakeup u:object_r:sysfs_wakeup:s0
 genfscon sysfs /devices/platform/soc/ac0000.qcom,qupv3_0_geni_se/a80000.i2c/i2c-2/2-005a/wakeup u:object_r:sysfs_wakeup:s0
 genfscon sysfs /devices/platform/soc/ac0000.qcom,qupv3_0_geni_se/a90000.spi/spi_master/spi0/spi0.0/wakeup u:object_r:sysfs_wakeup:s0

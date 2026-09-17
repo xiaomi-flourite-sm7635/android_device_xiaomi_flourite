@@ -25,6 +25,34 @@ on boot
     chown system system /sys/class/touch/touch_dev/gesture_double_tap_enabled
     chmod 0660 /sys/class/touch/touch_dev/gesture_double_tap_enabled
 
+    # The source-built fingerprint service runs as system and loads the
+    # proprietary Goodix/Jiiov legacy HAL directly.
+    chown system system /dev/goodix_fp
+    chmod 0660 /dev/goodix_fp
+    chown system system /dev/xiaomi-fp
+    chmod 0660 /dev/xiaomi-fp
+    chown system system /dev/mifp_id
+    chmod 0660 /dev/mifp_id
+    chown system system /sys/bus/platform/devices/soc:xiaomi_fingerprint/fingerdown
+    chmod 0660 /sys/bus/platform/devices/soc:xiaomi_fingerprint/fingerdown
+    chown system system /sys/bus/platform/devices/soc:xiaomi_fingerprint/intr2
+    chmod 0660 /sys/bus/platform/devices/soc:xiaomi_fingerprint/intr2
+
+on post-fs-data
+    mkdir /data/vendor/misc/mi_fp 0770 system system
+    mkdir /data/vendor/fpc 0770 system system
+    mkdir /data/vendor/fpdump 0770 system system
+    mkdir /data/vendor/fpdump/qfs4008 0770 system system
+    mkdir /data/vendor/goodix 0770 system system
+    mkdir /data/vendor/fpdata 0770 system system
+    mkdir /data/vendor/fingerprint 0770 system system
+    mkdir /persist/mi_fp 0770 system system
+    mkdir /mnt/vendor/persist/mi_fp 0770 system system
+    mkdir /mnt/vendor/persist/goodix 0770 system system
+    mkdir /mnt/vendor/persist/fpc 0770 system system
+    mkdir /mnt/vendor/persist/fingerprint 0770 system system
+    mkdir /mnt/vendor/persist/fingerprint/jiiov 0770 system system
+
 
 # The qcom-battery class is registered by a late-loaded kernel module, after
 # the boot action has already run. Grant Lineage Health access once Android

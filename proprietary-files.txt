@@ -19,7 +19,6 @@ odm/bin/hw/android.hardware.gnss-aidl-service-qti
 odm/bin/hw/android.hardware.gnss-service.hdbdAidl
 odm/bin/hw/android.hardware.nqnfc-service.nxp
 odm/bin/hw/android.hardware.weaver-service.nxp-qti
-odm/bin/hw/mfp-daemon
 odm/bin/hw/mifaced
 odm/bin/hw/misensor_camera
 odm/bin/hw/vendor.xiaomi.hardware.bdShortMsg-service
@@ -908,7 +907,6 @@ odm/etc/init/init.boled.lightsensor.rc
 odm/etc/init/init.cirrus.rc
 odm/etc/init/init.elliptic.rc
 odm/etc/init/init.foursemi.rc
-odm/etc/init/init.mfp-daemon.aidl.rc
 odm/etc/init/init.tfa.rc
 odm/etc/init/miface.rc
 odm/etc/init/miface_start_with_system_boot.rc
@@ -1175,10 +1173,8 @@ odm/etc/touch/gameturbotool-control.json
 odm/etc/touch/gameturbotool-fastinput.json
 odm/etc/touch/gameturbotool.json
 odm/etc/usecaseKvManager.xml
-odm/etc/vintf/manifest/AHBF-V3-service.xml
 odm/etc/vintf/manifest/android.hardware.biometrics.face-v3.xml
 odm/etc/vintf/manifest/android.hardware.weaver-service.nxp.xml
-odm/etc/vintf/manifest/fod-aidl.xml
 odm/etc/vintf/manifest/gnss-default.xml:odm/etc/vintf/manifest/flourite-gnss-default.xml;TRYSRCFIRST
 odm/etc/vintf/manifest/manifest_nxp_nfc_ese.xml
 odm/etc/vintf/manifest/manifest_vendor.xiaomi.hardware.aidl.mtdservice.xml

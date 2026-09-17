@@ -98,16 +98,6 @@ lib_fixups: lib_fixups_user_type = {
 blob_fixups: blob_fixups_user_type = {
     'odm/etc/vintf/manifest/vendor.xiaomi.hardware.vibratorfeature.service.xml': blob_fixup()
         .regex_replace(r'<hal format="aidl" override="true">', '<hal format="aidl">'),
-    'odm/etc/init/init.mfp-daemon.aidl.rc': blob_fixup()
-        .regex_replace(
-            r'u:r:vendor_mfp-daemon:s0',
-            'u:r:hal_fingerprint_default:s0',
-        ),
-    'odm/bin/hw/mfp-daemon': blob_fixup()
-        .replace_needed(
-            'android.hardware.biometrics.common.util.so',
-            'android.hardware.biometrics.common.util_v3.so',
-        ),
     'odm/lib64/libkeymint_empty-nxp.so': blob_fixup()
         .replace_needed(
             'lib_android_keymaster_keymint_utils.so',

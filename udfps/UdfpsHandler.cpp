@@ -11,15 +11,17 @@
 #include <android-base/properties.h>
 #include <android-base/unique_fd.h>
 
+#include <bitset>
+#include <fcntl.h>
 #include <poll.h>
 #include <sys/ioctl.h>
 #include <fstream>
 #include <thread>
 
 #include <display/drm/mi_disp.h>
-#include <linux/xiaomi_touch.h>
 
 #include "UdfpsHandler.h"
+#include "xiaomi_touch.h"
 
 #define COMMAND_NIT 10
 #define TARGET_BRIGHTNESS_OFF 0
@@ -40,6 +42,11 @@
 using ::aidl::android::hardware::biometrics::fingerprint::AcquiredInfo;
 
 namespace {
+
+// These event bits live in the Flourite display driver's internal
+// mi_disp_lhbm.h and are intentionally absent from its exported UAPI header.
+constexpr __u32 kFodLowBrightnessCapture = 1U << 2;
+constexpr __u32 kLocalHbmUiReady = 1U << 3;
 
 static std::shared_ptr<disp_event_resp> parseDispEvent(int fd) {
     // mi_disp_read() only returns complete events. FOD events consist of the
@@ -73,6 +80,32 @@ struct disp_base displayBasePrimary = {
         .disp_id = MI_DISP_PRIMARY,
 };
 
+static bool runIoctl(int fd, unsigned long request, void* data, const char* operation) {
+    if (fd < 0) {
+        LOG(ERROR) << operation << ": device is not open";
+        return false;
+    }
+
+    if (ioctl(fd, request, data) < 0) {
+        PLOG(ERROR) << operation << " failed";
+        return false;
+    }
+
+    return true;
+}
+
+static bool setTouchFingerState(int fd, bool pressed) {
+    int request[XIAOMI_TOUCH_MAX_BUF_SIZE] = {
+            MI_DISP_PRIMARY,
+            XIAOMI_TOUCH_FOD_DOWNUP_CTL,
+            pressed ? 1 : 0,
+    };
+
+    return runIoctl(fd, XIAOMI_TOUCH_IOC_SET_CUR_VALUE, request,
+                    pressed ? "set FOD finger-down touch state"
+                            : "set FOD finger-up touch state");
+}
+
 }  // anonymous namespace
 
 class FlouriteUdfpsHandler : public UdfpsHandler {
@@ -81,6 +114,12 @@ class FlouriteUdfpsHandler : public UdfpsHandler {
         mDevice = device;
         disp_fd_ = android::base::unique_fd(open(DISP_FEATURE_PATH, O_RDWR));
         touch_fd_ = android::base::unique_fd(open(TOUCH_DEV_PATH, O_RDWR));
+        if (disp_fd_ < 0) {
+            PLOG(ERROR) << "failed to open " << DISP_FEATURE_PATH;
+        }
+        if (touch_fd_ < 0) {
+            PLOG(ERROR) << "failed to open " << TOUCH_DEV_PATH;
+        }
 
         // Thread to listen for fod ui changes
         std::thread([this]() {
@@ -136,8 +175,8 @@ class FlouriteUdfpsHandler : public UdfpsHandler {
                 int value = response->data[0];
                 LOG(DEBUG) << "received data: " << std::bitset<8>(value);
 
-                bool localHbmUiReady = value & LOCAL_HBM_UI_READY;
-                bool requestLowBrightnessCapture = value & FOD_LOW_BRIGHTNESS_CAPTURE;
+                bool localHbmUiReady = value & kLocalHbmUiReady;
+                bool requestLowBrightnessCapture = value & kFodLowBrightnessCapture;
 
                 mDevice->extCmd(mDevice, COMMAND_NIT,
                                 localHbmUiReady
@@ -156,19 +195,15 @@ class FlouriteUdfpsHandler : public UdfpsHandler {
         mDevice->extCmd(mDevice, COMMAND_FOD_PRESS_Y, y);
         mDevice->extCmd(mDevice, COMMAND_FOD_PRESS_STATUS, PARAM_FOD_PRESSED);
 
-        // Update fod_finger_state node in case hwmodule polls it
-        struct touch_mode_request touchRequest = {
-                .mode = TOUCH_MODE_FOD_FINGER_STATE,
-                .value = 1,
-        };
-        ioctl(touch_fd_.get(), TOUCH_IOC_SET_CUR_VALUE, &touchRequest);
+        setTouchFingerState(touch_fd_.get(), true);
 
         // Request HBM
         struct disp_local_hbm_req displayLhbmRequest = {
                 .base = displayBasePrimary,
                 .local_hbm_value = LHBM_TARGET_BRIGHTNESS_WHITE_1000NIT,
         };
-        ioctl(disp_fd_.get(), MI_DISP_IOCTL_SET_LOCAL_HBM, &displayLhbmRequest);
+        runIoctl(disp_fd_.get(), MI_DISP_IOCTL_SET_LOCAL_HBM, &displayLhbmRequest,
+                 "enable local HBM");
     }
 
     void onFingerUp() {
@@ -183,14 +218,10 @@ class FlouriteUdfpsHandler : public UdfpsHandler {
                 .base = displayBasePrimary,
                 .local_hbm_value = LHBM_TARGET_BRIGHTNESS_OFF_FINGER_UP,
         };
-        ioctl(disp_fd_.get(), MI_DISP_IOCTL_SET_LOCAL_HBM, &displayLhbmRequest);
+        runIoctl(disp_fd_.get(), MI_DISP_IOCTL_SET_LOCAL_HBM, &displayLhbmRequest,
+                 "disable local HBM");
 
-        // Update fod_finger_state node in case hwmodule polls it
-        struct touch_mode_request touchRequest = {
-                .mode = TOUCH_MODE_FOD_FINGER_STATE,
-                .value = 0,
-        };
-        ioctl(touch_fd_.get(), TOUCH_IOC_SET_CUR_VALUE, &touchRequest);
+        setTouchFingerState(touch_fd_.get(), false);
     }
 
     void onAcquired(int32_t result, int32_t vendorCode) {
