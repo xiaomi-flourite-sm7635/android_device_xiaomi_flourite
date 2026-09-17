@@ -14,6 +14,8 @@
 #include <poll.h>
 #include <sys/ioctl.h>
 
+#include <memory>
+
 #include "SensorNotifierUtils.h"
 
 static const std::string kDispFeatureDevice = "/dev/mi_display/disp_feature";
@@ -87,12 +89,22 @@ void AodNotifier::notify() {
     while (mActive) {
         int rc = poll(&dispEventPoll, 1, -1);
         if (rc < 0) {
-            LOG(ERROR) << "failed to poll " << kDispFeatureDevice << ", err: " << rc;
+            PLOG(ERROR) << "failed to poll " << kDispFeatureDevice;
             continue;
         }
 
-        struct disp_event_resp* response = parseDispEvent(disp_fd_.get());
-        if (response == nullptr) {
+        if (dispEventPoll.revents & (POLLERR | POLLHUP | POLLNVAL)) {
+            LOG(ERROR) << "display event fd failed, revents=" << dispEventPoll.revents;
+            return;
+        }
+
+        if (!(dispEventPoll.revents & POLLIN)) {
+            continue;
+        }
+
+        std::unique_ptr<disp_event_resp, decltype(&free)> response(
+                parseDispEvent(disp_fd_.get()), free);
+        if (!response) {
             continue;
         }
 

@@ -42,30 +42,26 @@ using ::aidl::android::hardware::biometrics::fingerprint::AcquiredInfo;
 namespace {
 
 static std::shared_ptr<disp_event_resp> parseDispEvent(int fd) {
-    disp_event header;
-    ssize_t headerSize = read(fd, &header, sizeof(header));
-    if (headerSize < sizeof(header)) {
-        LOG(ERROR) << "unexpected display event header size: " << headerSize;
-        return nullptr;
-    }
-
-    std::shared_ptr<disp_event_resp> response(static_cast<disp_event_resp*>(malloc(header.length)),
-                                              free);
+    // mi_disp_read() only returns complete events. FOD events consist of the
+    // event header plus a u32 payload, so consume both in one read.
+    constexpr size_t kEventSize = sizeof(disp_event) + sizeof(__u32);
+    std::shared_ptr<disp_event_resp> response(
+            static_cast<disp_event_resp*>(malloc(kEventSize)), free);
     if (!response) {
         LOG(ERROR) << "failed to allocate memory for display event response";
         return nullptr;
     }
-    response->base = header;
 
-    int dataLength = response->base.length - sizeof(response->base);
-    if (dataLength < 0) {
-        LOG(ERROR) << "invalid data length: " << response->base.length;
+    ssize_t eventSize = read(fd, response.get(), kEventSize);
+    if (eventSize < 0) {
+        PLOG(ERROR) << "failed to read display event";
         return nullptr;
     }
 
-    ssize_t dataSize = read(fd, &response->data, dataLength);
-    if (dataSize < dataLength) {
-        LOG(ERROR) << "unexpected display event data size: " << dataSize;
+    if (eventSize != static_cast<ssize_t>(kEventSize) ||
+        response->base.length != static_cast<__u32>(eventSize)) {
+        LOG(ERROR) << "unexpected display event size: read=" << eventSize
+                   << ", reported=" << response->base.length;
         return nullptr;
     }
 
@@ -113,7 +109,17 @@ class FlouriteUdfpsHandler : public UdfpsHandler {
             while (true) {
                 int rc = poll(&dispEventPoll, 1, -1);
                 if (rc < 0) {
-                    LOG(ERROR) << "failed to poll " << DISP_FEATURE_PATH << ", err: " << rc;
+                    PLOG(ERROR) << "failed to poll " << DISP_FEATURE_PATH;
+                    continue;
+                }
+
+                if (dispEventPoll.revents & (POLLERR | POLLHUP | POLLNVAL)) {
+                    LOG(ERROR) << "display event fd failed, revents="
+                               << dispEventPoll.revents;
+                    return;
+                }
+
+                if (!(dispEventPoll.revents & POLLIN)) {
                     continue;
                 }
 

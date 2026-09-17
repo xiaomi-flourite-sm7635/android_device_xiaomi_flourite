@@ -30,26 +30,27 @@ bool readBool(int fd) {
 }
 
 disp_event_resp* parseDispEvent(int fd) {
-    disp_event header;
-    ssize_t headerSize = read(fd, &header, sizeof(header));
-    if (headerSize < sizeof(header)) {
-        LOG(ERROR) << "unexpected display event header size: " << headerSize;
+    // mi_disp_read() only returns complete events. Reading just the header leaves
+    // the event queued forever because POWER and FOD events also carry a u32.
+    constexpr size_t kEventSize = sizeof(disp_event) + sizeof(__u32);
+    auto* response = reinterpret_cast<disp_event_resp*>(malloc(kEventSize));
+    if (response == nullptr) {
+        LOG(ERROR) << "failed to allocate display event response";
         return nullptr;
     }
 
-    struct disp_event_resp* response =
-            reinterpret_cast<struct disp_event_resp*>(malloc(header.length));
-    response->base = header;
-
-    int dataLength = response->base.length - sizeof(response->base);
-    if (dataLength < 0) {
-        LOG(ERROR) << "invalid data length: " << response->base.length;
+    ssize_t eventSize = read(fd, response, kEventSize);
+    if (eventSize < 0) {
+        PLOG(ERROR) << "failed to read display event";
+        free(response);
         return nullptr;
     }
 
-    ssize_t dataSize = read(fd, &response->data, dataLength);
-    if (dataSize < dataLength) {
-        LOG(ERROR) << "unexpected display event data size: " << dataSize;
+    if (eventSize != static_cast<ssize_t>(kEventSize) ||
+        response->base.length != static_cast<__u32>(eventSize)) {
+        LOG(ERROR) << "unexpected display event size: read=" << eventSize
+                   << ", reported=" << response->base.length;
+        free(response);
         return nullptr;
     }
 
