@@ -1734,6 +1734,10 @@ odm/lib64/vendor.xiaomi.hardware.mpayjoyca-V1-ndk_platform.so
 odm/lib64/vendor.xiaomi.hardware.mrm-V1-ndk_platform.so
 odm/lib64/vendor.xiaomi.hardware.otrpagent@2.0-impl.so
 
+# MBN OTA
+vendor/bin/mbnota
+vendor/etc/init/vendor.mbnota.rc
+
 # Vendor
 vendor/apex/com.google.android.widevine.nonupdatable.apex
 vendor/app/CACertService/CACertService.apk

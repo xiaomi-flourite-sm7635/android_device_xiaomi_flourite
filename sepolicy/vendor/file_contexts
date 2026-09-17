@@ -83,6 +83,10 @@
 /data/vendor/mac_addr(/.*)? u:object_r:vendor_mac_vendor_data_file:s0
 /vendor/bin/nv_mac u:object_r:vendor_wcnss_service_exec:s0
 
+# MBN OTA
+/(vendor|system/vendor)/bin/mbnota u:object_r:vendor_mbnota_exec:s0
+/data/vendor/mbnconfig(/.*)? u:object_r:vendor_firmware_data_file:s0
+
 # Mlipay
 /(odm|vendor/odm|system/vendor)/bin/mlipayd u:object_r:hal_mlipay_default_exec:s0
 
