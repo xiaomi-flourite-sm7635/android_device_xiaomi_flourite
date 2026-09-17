@@ -1,6 +1,9 @@
 # Device
 ro.product.mod_device=flourite_global
 
+# Data
+persist.vendor.data.mode=concurrent
+
 # QTI
 ro.vendor.qti.va_aosp.support=1
 
