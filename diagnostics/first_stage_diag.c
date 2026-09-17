@@ -7,9 +7,10 @@
 #include <dirent.h>
 #include <errno.h>
 #include <fcntl.h>
+#include <limits.h>
 #include <linux/fs.h>
 #include <linux/reboot.h>
-#include <limits.h>
+#include <poll.h>
 #include <signal.h>
 #include <stdarg.h>
 #include <stdbool.h>
@@ -27,6 +28,8 @@
 
 #define DIAG_PREFIX "flourite-first-stage: "
 #define WATCHDOG_TIMEOUT_SECONDS 90
+#define KMSG_POLL_TIMEOUT_MS 10
+#define PERSISTENT_SYNC_INTERVAL_MS 50
 #define OOPS_DISCOVERY_ATTEMPTS 200
 #define OOPS_DISCOVERY_DELAY_US 100000
 #define OOPS_MAX_PARTITION_SIZE (16ULL * 1024ULL * 1024ULL)
@@ -34,7 +37,7 @@
 #define OOPS_HEADER_SIZE 4096ULL
 #define MTDOOPS_MAGIC_V1 UINT32_C(0x5d005d00)
 #define MTDOOPS_MAGIC_V2 UINT32_C(0x5d005e00)
-#define PERSISTENT_MARKER "FLOURITE_FIRST_STAGE_DIAG_V10"
+#define PERSISTENT_MARKER "FLOURITE_FIRST_STAGE_DIAG_V11"
 #define EARLY_OOPS_NODE ".flourite-first-stage-oops"
 
 static int kmsg_fd = -1;
@@ -239,8 +242,8 @@ static bool ParseDeviceNumber(const char *text, dev_t *device_number) {
     return false;
   }
 
-  dev_t parsed = makedev((unsigned int)major_number,
-                         (unsigned int)minor_number);
+  dev_t parsed =
+      makedev((unsigned int)major_number, (unsigned int)minor_number);
   if ((unsigned long)major(parsed) != major_number ||
       (unsigned long)minor(parsed) != minor_number) {
     return false;
@@ -251,8 +254,7 @@ static bool ParseDeviceNumber(const char *text, dev_t *device_number) {
 
 static int TryOpenEarlyOopsDevice(int block_directory_fd,
                                   const char *block_name,
-                                  uint64_t *partition_size,
-                                  char *selected_path,
+                                  uint64_t *partition_size, char *selected_path,
                                   size_t selected_path_size) {
   if (dev_root_fd < 0) {
     errno = ENOENT;
@@ -260,8 +262,8 @@ static int TryOpenEarlyOopsDevice(int block_directory_fd,
   }
 
   char dev_attribute[256];
-  int length = snprintf(dev_attribute, sizeof(dev_attribute), "%s/dev",
-                        block_name);
+  int length =
+      snprintf(dev_attribute, sizeof(dev_attribute), "%s/dev", block_name);
   if (length < 0 || (size_t)length >= sizeof(dev_attribute)) {
     errno = ENAMETOOLONG;
     return -1;
@@ -281,15 +283,15 @@ static int TryOpenEarlyOopsDevice(int block_directory_fd,
 
   bool created = false;
   struct stat existing;
-  if (fstatat(dev_root_fd, EARLY_OOPS_NODE, &existing,
-              AT_SYMLINK_NOFOLLOW) == 0) {
+  if (fstatat(dev_root_fd, EARLY_OOPS_NODE, &existing, AT_SYMLINK_NOFOLLOW) ==
+      0) {
     if (!S_ISBLK(existing.st_mode) || existing.st_rdev != device_number) {
       errno = EEXIST;
       return -1;
     }
   } else if (errno == ENOENT) {
-    if (mknodat(dev_root_fd, EARLY_OOPS_NODE, S_IFBLK | 0600,
-                device_number) != 0) {
+    if (mknodat(dev_root_fd, EARLY_OOPS_NODE, S_IFBLK | 0600, device_number) !=
+        0) {
       return -1;
     }
     created = true;
@@ -297,8 +299,7 @@ static int TryOpenEarlyOopsDevice(int block_directory_fd,
     return -1;
   }
 
-  int fd =
-      TryOpenOopsDeviceAt(dev_root_fd, EARLY_OOPS_NODE, partition_size);
+  int fd = TryOpenOopsDeviceAt(dev_root_fd, EARLY_OOPS_NODE, partition_size);
   int saved_errno = errno;
   if (created && unlinkat(dev_root_fd, EARLY_OOPS_NODE, 0) != 0) {
     Log("failed to unlink private oops node: %s", strerror(errno));
@@ -306,8 +307,8 @@ static int TryOpenEarlyOopsDevice(int block_directory_fd,
   errno = saved_errno;
 
   if (fd >= 0) {
-    (void)snprintf(selected_path, selected_path_size,
-                   "/dev/%s (sysfs %s)", EARLY_OOPS_NODE, block_name);
+    (void)snprintf(selected_path, selected_path_size, "/dev/%s (sysfs %s)",
+                   EARLY_OOPS_NODE, block_name);
   }
   return fd;
 }
@@ -316,8 +317,8 @@ static int ScanForOopsDevice(uint64_t *partition_size, char *selected_path,
                              size_t selected_path_size) {
   int block_directory_fd;
   if (sys_class_block_fd >= 0) {
-    block_directory_fd = openat(sys_class_block_fd, ".",
-                                O_RDONLY | O_DIRECTORY | O_CLOEXEC);
+    block_directory_fd =
+        openat(sys_class_block_fd, ".", O_RDONLY | O_DIRECTORY | O_CLOEXEC);
   } else {
     block_directory_fd =
         open("/sys/class/block", O_RDONLY | O_DIRECTORY | O_CLOEXEC);
@@ -340,15 +341,15 @@ static int ScanForOopsDevice(uint64_t *partition_size, char *selected_path,
     }
 
     char uevent_path[256];
-    int length = snprintf(uevent_path, sizeof(uevent_path),
-                          "%s/uevent", entry->d_name);
+    int length =
+        snprintf(uevent_path, sizeof(uevent_path), "%s/uevent", entry->d_name);
     if (length < 0 || (size_t)length >= sizeof(uevent_path)) {
       continue;
     }
 
     char uevent[4096];
-    if (ReadSmallFileAt(dirfd(directory), uevent_path, uevent,
-                        sizeof(uevent)) < 0 ||
+    if (ReadSmallFileAt(dirfd(directory), uevent_path, uevent, sizeof(uevent)) <
+            0 ||
         !HasExactLine(uevent, "PARTNAME=oops")) {
       continue;
     }
@@ -366,9 +367,9 @@ static int ScanForOopsDevice(uint64_t *partition_size, char *selected_path,
       break;
     }
 
-    selected_fd = TryOpenEarlyOopsDevice(
-        dirfd(directory), entry->d_name, partition_size, selected_path,
-        selected_path_size);
+    selected_fd =
+        TryOpenEarlyOopsDevice(dirfd(directory), entry->d_name, partition_size,
+                               selected_path, selected_path_size);
     if (selected_fd >= 0) {
       break;
     }
@@ -499,7 +500,7 @@ static void UpdatePersistentHeader(const char *status, int elapsed) {
   (void)snprintf((char *)header + sizeof(struct MtdOopsHeader),
                  sizeof(header) - sizeof(struct MtdOopsHeader),
                  PERSISTENT_MARKER
-                 "\nversion=9\nstatus=%s\nelapsed_seconds=%d\n"
+                 "\nversion=11\nstatus=%s\nelapsed_seconds=%d\n"
                  "record_index=%u\nsequence=%u\nlog_bytes=%llu\n"
                  "truncated=%d\nsecond_stage_seen=%d\n",
                  status, elapsed, oops_record_index, oops_sequence,
@@ -562,7 +563,7 @@ static bool InitializePersistentLog(void) {
   oops_write_offset = OOPS_HEADER_SIZE;
   oops_log_truncated = false;
   UpdatePersistentHeader("initializing", 0);
-  PersistentAppendString("\n--- FLOURITE V10 KMSG BEGIN ---\n");
+  PersistentAppendString("\n--- FLOURITE V11 KMSG BEGIN ---\n");
   Log("persistent logger attached to %s, size=%llu, record=%u, sequence=%u",
       selected_path, (unsigned long long)partition_size, oops_record_index,
       oops_sequence);
@@ -582,15 +583,30 @@ static void PrepareKernelLogReader(void) {
   }
 }
 
-static void DrainKernelLog(void) {
+static bool KernelRecordNeedsImmediateSync(const char *buffer, ssize_t length) {
+  unsigned int priority = 0;
+  ssize_t index = 0;
+  while (index < length && buffer[index] >= '0' && buffer[index] <= '9') {
+    priority = priority * 10U + (unsigned int)(buffer[index] - '0');
+    ++index;
+  }
+  return index > 0 && index < length && buffer[index] == ',' &&
+         (priority & 7U) <= 3U;
+}
+
+static bool DrainKernelLog(void) {
+  bool immediate_sync = false;
   if (kmsg_read_fd < 0 || oops_fd < 0) {
-    return;
+    return false;
   }
 
   for (int record = 0; record < 8192; ++record) {
     char buffer[8192];
     ssize_t bytes = read(kmsg_read_fd, buffer, sizeof(buffer));
     if (bytes > 0) {
+      if (KernelRecordNeedsImmediateSync(buffer, bytes)) {
+        immediate_sync = true;
+      }
       PersistentAppend(buffer, (size_t)bytes);
       continue;
     }
@@ -611,17 +627,50 @@ static void DrainKernelLog(void) {
     }
     break;
   }
+  return immediate_sync;
+}
+
+static void FlushPersistentLog(const char *status, int elapsed) {
+  if (oops_fd < 0) {
+    return;
+  }
+  UpdatePersistentHeader(status, elapsed);
+  if (fdatasync(oops_fd) != 0) {
+    Log("failed to sync persistent log: %s", strerror(errno));
+  }
 }
 
 static void SyncPersistentLog(const char *status, int elapsed) {
   if (oops_fd < 0) {
     return;
   }
-  DrainKernelLog();
-  UpdatePersistentHeader(status, elapsed);
-  if (fdatasync(oops_fd) != 0) {
-    Log("failed to sync persistent log: %s", strerror(errno));
+  (void)DrainKernelLog();
+  FlushPersistentLog(status, elapsed);
+}
+
+static int64_t MonotonicMilliseconds(void) {
+  struct timespec now;
+  if (clock_gettime(CLOCK_MONOTONIC, &now) != 0) {
+    return -1;
   }
+  return (int64_t)now.tv_sec * INT64_C(1000) + now.tv_nsec / 1000000;
+}
+
+static void WaitForKernelLog(void) {
+  if (kmsg_read_fd < 0) {
+    usleep(KMSG_POLL_TIMEOUT_MS * 1000U);
+    return;
+  }
+
+  struct pollfd descriptor = {
+      .fd = kmsg_read_fd,
+      .events = POLLIN | POLLERR,
+      .revents = 0,
+  };
+  int result;
+  do {
+    result = poll(&descriptor, 1, KMSG_POLL_TIMEOUT_MS);
+  } while (result < 0 && errno == EINTR);
 }
 
 static void DumpFileAt(const char *label, int directory_fd, const char *path,
@@ -703,11 +752,9 @@ static void DumpDirectory(const char *path, size_t limit) {
   closedir(directory);
 }
 
-static void DumpLinkAt(const char *label, int directory_fd,
-                       const char *path) {
+static void DumpLinkAt(const char *label, int directory_fd, const char *path) {
   char target[512];
-  ssize_t length =
-      readlinkat(directory_fd, path, target, sizeof(target) - 1);
+  ssize_t length = readlinkat(directory_fd, path, target, sizeof(target) - 1);
   if (length < 0) {
     Log("%s unavailable: %s", label, strerror(errno));
     return;
@@ -811,9 +858,8 @@ static void DumpProcessThreadsAt(int process_fd, const char *pid,
     Log("task pid=%s tid=%s comm=%s", pid, entry->d_name, thread_name);
 
     path_length = snprintf(path, sizeof(path), "%s/wchan", entry->d_name);
-    int label_length = snprintf(label, sizeof(label),
-                                "task-%s-%s-%s-wchan", pid, entry->d_name,
-                                thread_name);
+    int label_length = snprintf(label, sizeof(label), "task-%s-%s-%s-wchan",
+                                pid, entry->d_name, thread_name);
     if (path_length >= 0 && (size_t)path_length < sizeof(path) &&
         label_length >= 0 && (size_t)label_length < sizeof(label)) {
       DumpFileAt(label, dirfd(tasks), path, 512);
@@ -1012,8 +1058,7 @@ static void OpenPreservedNamespaceFds(void) {
   dev_root_fd = open("/dev", O_RDONLY | O_DIRECTORY | O_CLOEXEC);
   sys_class_block_fd =
       open("/sys/class/block", O_RDONLY | O_DIRECTORY | O_CLOEXEC);
-  sys_dev_block_fd =
-      open("/sys/dev/block", O_RDONLY | O_DIRECTORY | O_CLOEXEC);
+  sys_dev_block_fd = open("/sys/dev/block", O_RDONLY | O_DIRECTORY | O_CLOEXEC);
 
   if (proc_root_fd < 0 || dev_root_fd < 0 || sys_class_block_fd < 0 ||
       sys_dev_block_fd < 0) {
@@ -1030,8 +1075,8 @@ static void ClosePreservedNamespaceFds(void) {
       &sys_dev_block_fd,
   };
 
-  for (size_t index = 0;
-       index < sizeof(descriptors) / sizeof(descriptors[0]); ++index) {
+  for (size_t index = 0; index < sizeof(descriptors) / sizeof(descriptors[0]);
+       ++index) {
     if (*descriptors[index] >= 0) {
       close(*descriptors[index]);
       *descriptors[index] = -1;
@@ -1086,7 +1131,7 @@ int main(void) {
     PrepareKernelLogReader();
   }
 
-  Log("diagnostic hook V10 started, pid=%d", getpid());
+  Log("diagnostic hook V11 started, pid=%d", getpid());
   DumpFile("cmdline", "/proc/cmdline", 16384);
   DumpFile("bootconfig", "/proc/bootconfig", 32768);
   DumpState("before first-stage mounts");
@@ -1162,9 +1207,34 @@ int main(void) {
   DumpState("persistent logger online");
   SyncPersistentLog("watchdog-active", 0);
 
-  for (int elapsed = 1; elapsed <= WATCHDOG_TIMEOUT_SECONDS; ++elapsed) {
-    sleep(1);
-    DrainKernelLog();
+  int64_t started_ms = MonotonicMilliseconds();
+  int64_t last_sync_ms = started_ms;
+  int last_elapsed = 0;
+  while (last_elapsed < WATCHDOG_TIMEOUT_SECONDS) {
+    WaitForKernelLog();
+    bool immediate_sync = DrainKernelLog();
+    int64_t now_ms = MonotonicMilliseconds();
+    if (now_ms < 0 || started_ms < 0) {
+      now_ms = last_sync_ms + KMSG_POLL_TIMEOUT_MS;
+      if (started_ms < 0) {
+        started_ms = 0;
+      }
+    }
+    int elapsed = (int)((now_ms - started_ms) / 1000);
+    if (elapsed < 0) {
+      elapsed = 0;
+    }
+
+    if (immediate_sync ||
+        now_ms - last_sync_ms >= PERSISTENT_SYNC_INTERVAL_MS) {
+      FlushPersistentLog("watchdog-active", elapsed);
+      last_sync_ms = now_ms;
+    }
+    if (elapsed <= last_elapsed) {
+      continue;
+    }
+    last_elapsed = elapsed;
+
     if (!second_stage_logged && SecondStageStarted()) {
       Log("second-stage init detected after %d seconds", elapsed);
       second_stage_logged = true;
@@ -1184,9 +1254,9 @@ int main(void) {
       (void)snprintf(phase, sizeof(phase), "watchdog +%d seconds", elapsed);
       DumpState(phase);
     }
-    // A fatal PID 1 path waits only five seconds before rebooting to the
-    // configured target. Persist every second so the final LOG(FATAL), service
-    // crash loop and SELinux denial survive that reboot.
+    // The fatal PID 1 safety child waits five seconds, but the parent may
+    // reboot as soon as its unwind finishes. Keep this per-second checkpoint
+    // in addition to the sub-second capture above.
     SyncPersistentLog("watchdog-active", elapsed);
   }
 
