@@ -37,7 +37,7 @@
 #define OOPS_HEADER_SIZE 4096ULL
 #define MTDOOPS_MAGIC_V1 UINT32_C(0x5d005d00)
 #define MTDOOPS_MAGIC_V2 UINT32_C(0x5d005e00)
-#define PERSISTENT_MARKER "FLOURITE_FIRST_STAGE_DIAG_V12"
+#define PERSISTENT_MARKER "FLOURITE_FIRST_STAGE_DIAG_V13"
 #define EARLY_OOPS_NODE ".flourite-first-stage-oops"
 
 static int kmsg_fd = -1;
@@ -500,7 +500,7 @@ static void UpdatePersistentHeader(const char *status, int elapsed) {
   (void)snprintf((char *)header + sizeof(struct MtdOopsHeader),
                  sizeof(header) - sizeof(struct MtdOopsHeader),
                  PERSISTENT_MARKER
-                 "\nversion=12\nstatus=%s\nelapsed_seconds=%d\n"
+                 "\nversion=13\nstatus=%s\nelapsed_seconds=%d\n"
                  "record_index=%u\nsequence=%u\nlog_bytes=%llu\n"
                  "truncated=%d\nsecond_stage_seen=%d\n",
                  status, elapsed, oops_record_index, oops_sequence,
@@ -563,7 +563,7 @@ static bool InitializePersistentLog(void) {
   oops_write_offset = OOPS_HEADER_SIZE;
   oops_log_truncated = false;
   UpdatePersistentHeader("initializing", 0);
-  PersistentAppendString("\n--- FLOURITE V12 KMSG BEGIN ---\n");
+  PersistentAppendString("\n--- FLOURITE V13 KMSG BEGIN ---\n");
   Log("persistent logger attached to %s, size=%llu, record=%u, sequence=%u",
       selected_path, (unsigned long long)partition_size, oops_record_index,
       oops_sequence);
@@ -1131,7 +1131,7 @@ int main(void) {
     PrepareKernelLogReader();
   }
 
-  Log("diagnostic hook V12 started, pid=%d", getpid());
+  Log("diagnostic hook V13 started, pid=%d", getpid());
   DumpFile("cmdline", "/proc/cmdline", 16384);
   DumpFile("bootconfig", "/proc/bootconfig", 32768);
   DumpState("before first-stage mounts");

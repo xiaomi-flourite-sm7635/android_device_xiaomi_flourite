@@ -134,6 +134,8 @@ BOARD_BOOTCONFIG += \
     androidboot.first_stage_console=1 \
     androidboot.first_stage_console_early=1 \
     androidboot.init_fatal_reboot_target=recovery
+BOARD_SEPOLICY_M4DEFS += \
+    flourite_first_stage_diagnostics=true
 endif
 
 # The stock 6.1.138 image/modules are the bootable default. Xiaomi's

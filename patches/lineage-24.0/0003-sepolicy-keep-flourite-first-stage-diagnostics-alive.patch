@@ -1,0 +1,37 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: lufrz <314570110+lufrz@users.noreply.github.com>
+Date: Thu, 17 Sep 2026 14:30:00 +0200
+Subject: [PATCH] sepolicy: Keep flourite first-stage diagnostics alive
+
+The flourite bring-up watchdog opens /dev/kmsg and a private oops block node
+before first-stage init loads policy. Permit only those inherited descriptors
+to remain useful after the enforcing transition, and only when the device
+build explicitly enables its diagnostic m4 switch.
+
+Change-Id: I73f90d4450dfe91fa01a5b533f7206427bd6988c
+---
+ private/kernel.te | 9 +++++++++
+ 1 file changed, 9 insertions(+)
+
+diff --git a/private/kernel.te b/private/kernel.te
+index e33ff37..1aeb0c8 100644
+--- a/private/kernel.te
++++ b/private/kernel.te
+@@ -65,6 +65,15 @@ allow kernel proc_sysrq:file w_file_perms;
+ # Allow writing to /dev/kmsg which was created prior to loading policy.
+ allow kernel tmpfs:chr_file write;
+ 
++# flourite's temporary first-stage watchdog inherits the kernel domain and
++# keeps these descriptors open across policy load. Never grant this access in
++# a normal build.
++ifelse(flourite_first_stage_diagnostics, `true', `
++allow kernel tmpfs:chr_file read;
++allow kernel tmpfs:blk_file write;
++allow kernel kmsg_device:chr_file read;
++')
++
+ # Set checkreqprot by init.rc prior to switching to init domain.
+ allow kernel selinuxfs:file write;
+ allow kernel self:security setcheckreqprot;
+-- 
+2.53.0

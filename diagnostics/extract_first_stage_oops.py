@@ -10,6 +10,7 @@ from pathlib import Path
 RECORD_SIZE = 2 * 1024 * 1024
 HEADER_SIZE = 4096
 MARKERS = (
+    b"FLOURITE_FIRST_STAGE_DIAG_V13",
     b"FLOURITE_FIRST_STAGE_DIAG_V12",
     b"FLOURITE_FIRST_STAGE_DIAG_V11",
     b"FLOURITE_FIRST_STAGE_DIAG_V10",
@@ -76,7 +77,21 @@ def main() -> int:
         )
 
     base = index * RECORD_SIZE
-    payload = contents[base + HEADER_SIZE : base + HEADER_SIZE + log_bytes]
+    record_payload = contents[base + HEADER_SIZE : base + RECORD_SIZE]
+
+    # Appends reach storage before the corresponding header update. If a
+    # policy transition or reset interrupts that update, valid trailing text
+    # can therefore exist past log_bytes. Records are erased to 0xff before
+    # use, so recover only the contiguous written suffix.
+    recovered_log_bytes = log_bytes
+    while (
+        recovered_log_bytes < maximum
+        and record_payload[recovered_log_bytes] != 0xFF
+    ):
+        recovered_log_bytes += 1
+
+    payload = record_payload[:recovered_log_bytes]
+    unsynced_bytes = recovered_log_bytes - log_bytes
     summary = (
         f"{marker.decode()}\n"
         f"record_index={index}\n"
@@ -86,12 +101,15 @@ def main() -> int:
             for key, value in values.items()
             if key not in {"record_index", "sequence"}
         )
+        + f"recovered_unsynced_bytes={unsynced_bytes}\n"
         + "\n"
     ).encode()
     args.output.write_bytes(summary + payload)
 
     print(
-        f"extracted record {index}, sequence {sequence}, {log_bytes} log bytes "
+        f"extracted record {index}, sequence {sequence}, "
+        f"{recovered_log_bytes} log bytes ({unsynced_bytes} recovered past "
+        f"the header) "
         f"to {args.output}"
     )
     return 0
