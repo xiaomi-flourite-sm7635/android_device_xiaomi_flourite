@@ -142,6 +142,15 @@ blob_fixups: blob_fixups_user_type = {
             'libsensorndkbridge.so',
             'libsensorndkbridge_sensors_v2.so',
         ),
+    'vendor/bin/system_dlkm_modprobe.sh': blob_fixup()
+        .regex_replace(
+            'SYSTEM_DLKM_DIRS="/system_dlkm/lib/modules"',
+            'SYSTEM_DLKM_DIRS="/system_dlkm/lib/modules /system_dlkm/lib"',
+        )
+        .regex_replace(
+            r'(\t\t# Wait until current dir modprobe finished\n\t\twait)\n\tdone\n\n\twait\n\n\texit 0',
+            r'\1\n\t\texit 0\n\tdone',
+        ),
     'vendor/lib64/hw/android.hardware.audio@7.1-impl.so': blob_fixup()
         .replace_needed(
             'android.hardware.audio@7.1-util.so',
