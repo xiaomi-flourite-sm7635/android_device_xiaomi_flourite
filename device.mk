@@ -369,6 +369,8 @@ PRODUCT_PACKAGES += \
     vendor_firmware_mnt_mountpoint
 
 # Power
+$(call soong_config_set,qtipower,mode_ext_lib,power-ext-flourite)
+
 PRODUCT_PACKAGES += \
     android.hardware.power-service-qti
 
@@ -399,8 +401,7 @@ PRODUCT_PACKAGES += \
 
 PRODUCT_PACKAGES += \
     sensors.dynamic_sensor_hal \
-    sensors.xiaomi.v2 \
-    sensors_xiaomi_v2_hw_symlink
+    sensors.xiaomi.flourite.udfps
 
 PRODUCT_COPY_FILES += \
     $(LOCAL_PATH)/configs/sensors/hals.conf:$(TARGET_COPY_OUT_VENDOR)/etc/sensors/hals.conf

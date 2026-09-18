@@ -9,7 +9,8 @@ hal_server_domain(hal_touchfeature_xiaomi_default, hal_touchfeature_xiaomi)
 # services such as the framework sensor service during initialization.
 binder_use(hal_touchfeature_xiaomi_default)
 hwbinder_use(hal_touchfeature_xiaomi_default)
-add_service(hal_touchfeature_xiaomi_server, hal_touchfeature_xiaomi_service)
+binder_call(hal_touchfeature_xiaomi_client, hal_touchfeature_xiaomi_server)
+hal_attribute_service(hal_touchfeature_xiaomi, hal_touchfeature_xiaomi_service)
 
 allow hal_touchfeature_xiaomi_default fwk_sensor_hwservice:hwservice_manager find;
 allow hal_touchfeature_xiaomi touchfeature_device:chr_file rw_file_perms;
