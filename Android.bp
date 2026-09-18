@@ -93,3 +93,12 @@ install_symlink {
     installed_location: "rfs/msm/mpss/readonly/mbnconfig",
     symlink_target: "/data/vendor/mbnconfig",
 }
+
+// The sensors multihal only searches its hw subdirectories for plugins, while
+// sensors.xiaomi.v2 is installed by the shared hardware project in lib64.
+install_symlink {
+    name: "sensors_xiaomi_v2_hw_symlink",
+    vendor: true,
+    installed_location: "lib64/hw/sensors.xiaomi.v2.so",
+    symlink_target: "../sensors.xiaomi.v2.so",
+}
