@@ -10,12 +10,19 @@
 #include <android-base/logging.h>
 #include <android-base/properties.h>
 #include <android-base/unique_fd.h>
+#include <android/binder_auto_utils.h>
+#include <android/binder_ibinder.h>
+#include <android/binder_manager.h>
+#include <android/binder_parcel.h>
+#include <android/binder_stability.h>
+#include <android/binder_status.h>
 
 #include <bitset>
 #include <fcntl.h>
 #include <poll.h>
 #include <sys/ioctl.h>
 #include <fstream>
+#include <mutex>
 #include <thread>
 
 #include <display/drm/mi_disp.h>
@@ -39,6 +46,8 @@
 #define DISP_FEATURE_PATH "/dev/mi_display/disp_feature"
 #define TOUCH_DEV_PATH "/dev/xiaomi-touch"
 
+#define GOODIX_ACQUIRED_AUTH_READY 21
+
 using ::aidl::android::hardware::biometrics::fingerprint::AcquiredInfo;
 
 namespace {
@@ -47,6 +56,22 @@ namespace {
 // mi_disp_lhbm.h and are intentionally absent from its exported UAPI header.
 constexpr __u32 kFodLowBrightnessCapture = 1U << 2;
 constexpr __u32 kLocalHbmUiReady = 1U << 3;
+constexpr int32_t kPrimaryTouchId = 0;
+constexpr int32_t kSetModeValueTransaction = FIRST_CALL_TRANSACTION + 8;
+constexpr char kTouchFeatureService[] =
+        "vendor.xiaomi.hw.touchfeature.ITouchFeature/default";
+constexpr char kTouchFeatureDescriptor[] = "vendor.xiaomi.hw.touchfeature.ITouchFeature";
+
+binder_status_t touchFeatureOnTransact(AIBinder*, transaction_code_t, const AParcel*, AParcel*) {
+    return STATUS_UNKNOWN_TRANSACTION;
+}
+
+AIBinder_Class* getTouchFeatureClass() {
+    static AIBinder_Class* clazz = AIBinder_Class_define(
+            kTouchFeatureDescriptor, [](void*) -> void* { return nullptr; }, [](void*) {},
+            touchFeatureOnTransact);
+    return clazz;
+}
 
 static std::shared_ptr<disp_event_resp> parseDispEvent(int fd) {
     // mi_disp_read() only returns complete events. FOD events consist of the
@@ -226,6 +251,14 @@ class FlouriteUdfpsHandler : public UdfpsHandler {
 
     void onAcquired(int32_t result, int32_t vendorCode) {
         LOG(DEBUG) << __func__ << " result: " << result << " vendorCode: " << vendorCode;
+        if (static_cast<AcquiredInfo>(result) == AcquiredInfo::VENDOR &&
+            vendorCode == GOODIX_ACQUIRED_AUTH_READY) {
+            // Goodix emits this while the panel is still on. Arm the FOD modes
+            // here so nvt_ts_suspend enters gesture mode instead of deep sleep.
+            setScreenOffFodMode(true);
+            return;
+        }
+
         switch (static_cast<AcquiredInfo>(result)) {
             case AcquiredInfo::GOOD:
             case AcquiredInfo::PARTIAL:
@@ -246,6 +279,7 @@ class FlouriteUdfpsHandler : public UdfpsHandler {
 
     void onAuthenticationSucceeded() {
         mAuthSuccess = true;
+        setScreenOffFodMode(false);
         onFingerUp();
         std::thread([this]() {
             std::this_thread::sleep_for(std::chrono::milliseconds(500));
@@ -255,10 +289,113 @@ class FlouriteUdfpsHandler : public UdfpsHandler {
 
     void onAuthenticationFailed() { onFingerUp(); }
 
+    void cancel() {
+        setScreenOffFodMode(false);
+        onFingerUp();
+    }
+
   private:
+    bool ensureTouchFeatureBinderLocked() {
+        if (touch_feature_binder_.get() != nullptr) {
+            return true;
+        }
+
+        AIBinder_Class* clazz = getTouchFeatureClass();
+        if (clazz == nullptr) {
+            LOG(ERROR) << "failed to create TouchFeature binder class";
+            return false;
+        }
+
+        AIBinder* binder = AServiceManager_waitForService(kTouchFeatureService);
+        if (binder == nullptr) {
+            LOG(ERROR) << "TouchFeature service is unavailable";
+            return false;
+        }
+        if (!AIBinder_associateClass(binder, clazz)) {
+            LOG(ERROR) << "failed to associate TouchFeature binder class";
+            AIBinder_decStrong(binder);
+            return false;
+        }
+
+        touch_feature_binder_ = ndk::SpAIBinder(binder);
+        return true;
+    }
+
+    bool setTouchFeatureMode(int32_t mode, int32_t value) {
+        std::lock_guard<std::mutex> lock(touch_feature_lock_);
+        if (!ensureTouchFeatureBinderLocked()) {
+            return false;
+        }
+
+        AParcel* in = nullptr;
+        binder_status_t status = AIBinder_prepareTransaction(touch_feature_binder_.get(), &in);
+        if (status != STATUS_OK) {
+            LOG(ERROR) << "failed to prepare TouchFeature transaction: " << status;
+            touch_feature_binder_ = nullptr;
+            return false;
+        }
+
+        status = AParcel_writeInt32(in, kPrimaryTouchId);
+        status = status == STATUS_OK ? AParcel_writeInt32(in, mode) : status;
+        status = status == STATUS_OK ? AParcel_writeInt32(in, value) : status;
+        if (status != STATUS_OK) {
+            LOG(ERROR) << "failed to write TouchFeature transaction: " << status;
+            AParcel_delete(in);
+            return false;
+        }
+
+        AParcel* out = nullptr;
+        status = AIBinder_transact(touch_feature_binder_.get(), kSetModeValueTransaction, &in,
+                                   &out, FLAG_PRIVATE_LOCAL);
+        if (status != STATUS_OK) {
+            LOG(ERROR) << "TouchFeature setModeValue(" << mode << ", " << value
+                       << ") failed: " << status;
+            touch_feature_binder_ = nullptr;
+            return false;
+        }
+
+        AStatus* aidlStatus = nullptr;
+        status = AParcel_readStatusHeader(out, &aidlStatus);
+        bool ok = status == STATUS_OK && aidlStatus != nullptr && AStatus_isOk(aidlStatus);
+        if (ok) {
+            int32_t result = 0;
+            status = AParcel_readInt32(out, &result);
+            ok = status == STATUS_OK && result == 0;
+            if (!ok) {
+                LOG(ERROR) << "TouchFeature setModeValue(" << mode << ", " << value
+                           << ") returned " << result << " with parcel status " << status;
+            }
+        } else {
+            LOG(ERROR) << "TouchFeature setModeValue(" << mode << ", " << value
+                       << ") returned binder status "
+                       << (aidlStatus != nullptr ? AStatus_getStatus(aidlStatus) : status);
+        }
+
+        if (aidlStatus != nullptr) {
+            AStatus_delete(aidlStatus);
+        }
+        AParcel_delete(out);
+        return ok;
+    }
+
+    void setScreenOffFodMode(bool enabled) {
+        const int32_t value = enabled ? 1 : 0;
+        const bool fodEnabled = setTouchFeatureMode(XIAOMI_TOUCH_FOD_ENABLE, value);
+        const bool iconEnabled = setTouchFeatureMode(XIAOMI_TOUCH_FOD_ICON_ENABLE, value);
+        if (!fodEnabled || !iconEnabled) {
+            LOG(WARNING) << "failed to " << (enabled ? "arm" : "disarm")
+                         << " screen-off UDFPS touch modes";
+        } else {
+            LOG(INFO) << (enabled ? "armed" : "disarmed")
+                      << " screen-off UDFPS touch modes";
+        }
+    }
+
     fingerprint_device_t* mDevice;
     android::base::unique_fd disp_fd_;
     android::base::unique_fd touch_fd_;
+    std::mutex touch_feature_lock_;
+    ndk::SpAIBinder touch_feature_binder_;
     bool mAuthSuccess = false;
 };
 

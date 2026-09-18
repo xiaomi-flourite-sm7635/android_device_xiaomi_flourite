@@ -1,6 +1,7 @@
 type vendor_hal_fingerprint_service_xiaomi, hal_service_type, protected_service, service_manager_type;
 
 hal_client_domain(hal_fingerprint_default, vendor_hal_perf)
+hal_client_domain(hal_fingerprint_default, hal_touchfeature_xiaomi)
 add_service(hal_fingerprint_default, vendor_hal_fingerprint_service_xiaomi)
 
 get_prop(hal_fingerprint_default, vendor_panel_info_prop)

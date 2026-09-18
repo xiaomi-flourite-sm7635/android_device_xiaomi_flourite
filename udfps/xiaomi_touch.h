@@ -25,6 +25,7 @@ enum xiaomi_touch_command {
 
 enum xiaomi_touch_mode {
     XIAOMI_TOUCH_FOD_ENABLE = 10,
+    XIAOMI_TOUCH_FOD_ICON_ENABLE = 16,
     XIAOMI_TOUCH_FOD_DOWNUP_CTL = 1001,
 };
 

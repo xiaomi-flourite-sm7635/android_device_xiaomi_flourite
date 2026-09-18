@@ -4,17 +4,25 @@
 // SPDX-License-Identifier: Apache-2.0
 //
 
+cc_library_headers {
+    name: "flourite_xiaomi_touch_headers",
+    vendor_available: true,
+    export_include_dirs: ["."],
+}
+
 cc_library {
     name: "libudfpshandler",
     vendor: true,
     srcs: ["UdfpsHandler.cpp"],
     shared_libs: [
         "libbase",
+        "libbinder_ndk",
     ],
     static_libs: [
         "android.hardware.biometrics.fingerprint-V4-ndk",
     ],
     header_libs: [
+        "flourite_xiaomi_touch_headers",
         "generated_kernel_headers",
         "//hardware/xiaomi:xiaomifingerprint_headers",
     ],
