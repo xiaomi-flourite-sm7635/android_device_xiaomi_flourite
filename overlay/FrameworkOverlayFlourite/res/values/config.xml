@@ -34,10 +34,12 @@
     <bool name="config_automatic_brightness_available">true</bool>
 
     <!-- Fast brightness animation ramp rate in brightness units per second-->
-    <integer name="config_brightness_ramp_rate_fast">4932</integer>
+    <!-- Framework fallback uses the 0..255 scale, not the 14-bit panel scale.
+         Per-panel XML below supplies explicit normalized directional ramps. -->
+    <integer name="config_brightness_ramp_rate_fast">255</integer>
 
     <!-- Slow brightness animation ramp rate in brightness units per second-->
-    <integer name="config_brightness_ramp_rate_slow">3946</integer>
+    <integer name="config_brightness_ramp_rate_slow">39</integer>
 
     <!-- Indicate available ColorDisplayManager.COLOR_MODE_xxx. -->
     <integer-array name="config_availableColorModes">
@@ -92,7 +94,7 @@
          brightness changes occur in response to an observed change in light level that exceeds the
          hysteresis threshold. -->
     <integer name="config_autoBrightnessBrighteningLightDebounce">1000</integer>
-    <integer name="config_autoBrightnessDarkeningLightDebounce">1000</integer>
+    <integer name="config_autoBrightnessDarkeningLightDebounce">2000</integer>
 
     <!-- The maximum range of gamma adjustment possible using the screen
          auto-brightness adjustment setting. -->
@@ -564,14 +566,14 @@
          the screen brightness is recalculated. See the config_ambientThresholdLevels
          description for how the constraint value is chosen. -->
     <integer-array name="config_ambientBrighteningThresholds">
-        <item>5</item>
-        <item>6</item>
-        <item>10</item>
-        <item>30</item>
         <item>100</item>
-        <item>400</item>
-        <item>600</item>
-        <item>1000</item>
+        <item>100</item>
+        <item>100</item>
+        <item>100</item>
+        <item>100</item>
+        <item>100</item>
+        <item>100</item>
+        <item>100</item>
     </integer-array>
 
     <!-- Array of hysteresis constraint values for darkening, represented as tenths of a
@@ -581,14 +583,14 @@
          the screen brightness is recalculated. See the config_ambientThresholdLevels
          description for how the constraint value is chosen. -->
     <integer-array name="config_ambientDarkeningThresholds">
-        <item>800</item>
-        <item>800</item>
-        <item>500</item>
-        <item>500</item>
-        <item>500</item>
-        <item>500</item>
-        <item>500</item>
-        <item>500</item>
+        <item>200</item>
+        <item>200</item>
+        <item>150</item>
+        <item>150</item>
+        <item>150</item>
+        <item>150</item>
+        <item>150</item>
+        <item>150</item>
     </integer-array>
 
     <!-- Array of screen brightness threshold values. This is used for determining hysteresis
@@ -617,7 +619,7 @@
          than this threshold, it is applied. See the config_screenThresholdLevels description for
          how the constraint value is chosen. -->
     <integer-array name="config_screenBrighteningThresholds">
-        <item>0</item>
+        <item>20</item>
     </integer-array>
 
     <!-- Array of hysteresis constraint values for darkening, represented as tenths of a
@@ -627,7 +629,7 @@
          this threshold, it is applied. See the config_screenThresholdLevels description for how
          the constraint value is chosen. -->
     <integer-array name="config_screenDarkeningThresholds">
-        <item>0</item>
+        <item>30</item>
     </integer-array>
 
     <!-- Note: This config is deprecated, use BluetoothProperties instead.

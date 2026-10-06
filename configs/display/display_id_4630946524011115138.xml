@@ -1,6 +1,14 @@
 <?xml version='1.0' encoding='utf-8' standalone='yes' ?>
 <!-- MIUI ADD: Adapt_MIUIAdaptFrame-->
 <displayConfiguration>
+    <!-- Normalized AOSP brightness units per second. Keep the stock nits/HBM
+         calibration, but smooth automatic changes and bound large transitions. -->
+    <screenBrightnessRampFastIncrease>1.0</screenBrightnessRampFastIncrease>
+    <screenBrightnessRampFastDecrease>1.0</screenBrightnessRampFastDecrease>
+    <screenBrightnessRampSlowIncrease>0.15</screenBrightnessRampSlowIncrease>
+    <screenBrightnessRampSlowDecrease>0.08</screenBrightnessRampSlowDecrease>
+    <screenBrightnessRampIncreaseMaxMillis>2000</screenBrightnessRampIncreaseMaxMillis>
+    <screenBrightnessRampDecreaseMaxMillis>4000</screenBrightnessRampDecreaseMaxMillis>
     <!-- Global Brightness-Nit mapping -->
     <screenBrightnessMap>
         <point>

@@ -36,6 +36,14 @@ SPDX-License-Identifier: BSD-3-Clause-Clear
 -->
 
 <displayConfiguration>
+    <!-- Normalized AOSP brightness units per second. Keep the stock nits/HBM
+         calibration, but smooth automatic changes and bound large transitions. -->
+    <screenBrightnessRampFastIncrease>1.0</screenBrightnessRampFastIncrease>
+    <screenBrightnessRampFastDecrease>1.0</screenBrightnessRampFastDecrease>
+    <screenBrightnessRampSlowIncrease>0.15</screenBrightnessRampSlowIncrease>
+    <screenBrightnessRampSlowDecrease>0.08</screenBrightnessRampSlowDecrease>
+    <screenBrightnessRampIncreaseMaxMillis>2000</screenBrightnessRampIncreaseMaxMillis>
+    <screenBrightnessRampDecreaseMaxMillis>4000</screenBrightnessRampDecreaseMaxMillis>
   <screenBrightnessMap interpolation="linear">
     <point>
       <value>0.0000</value>
@@ -269,10 +277,4 @@ SPDX-License-Identifier: BSD-3-Clause-Clear
       </point>
     </sdrHdrRatioMap>
   </highBrightnessMode>
-  <screenBrightnessRampFastDecrease>0.06</screenBrightnessRampFastDecrease>
-  <screenBrightnessRampFastIncrease>0.06</screenBrightnessRampFastIncrease>
-  <screenBrightnessRampSlowDecrease>0.04</screenBrightnessRampSlowDecrease>
-  <screenBrightnessRampSlowIncrease>0.04</screenBrightnessRampSlowIncrease>
-  <screenBrightnessRampIncreaseMaxMillis>3000</screenBrightnessRampIncreaseMaxMillis>
-  <screenBrightnessRampDecreaseMaxMillis>3000</screenBrightnessRampDecreaseMaxMillis>
 </displayConfiguration>
