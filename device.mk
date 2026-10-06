@@ -97,6 +97,10 @@ PRODUCT_PACKAGES += \
     libsndcardparser \
     libvolumelistener
 
+# Dolby Atmos
+PRODUCT_PACKAGES += \
+    LunarisDolby
+
 AUDIO_HAL_DIR := hardware/qcom-caf/sm8650/audio/primary-hal
 
 PRODUCT_COPY_FILES += \

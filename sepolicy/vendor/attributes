@@ -1,3 +1,8 @@
+# Dolby
+attribute hal_dms;
+attribute hal_dms_client;
+attribute hal_dms_server;
+
 # Camera
 attribute hal_camera_mivi;
 attribute hal_camera_mivi_client;

@@ -1,8 +1,10 @@
 # Audio
+persist.vendor.audio.effectimplenter=dolby
 persist.vendor.audio.spf_restart=true
 ro.vendor.audio.aw.monitor=true
 ro.vendor.audio.camera.loopback.support=false
 ro.vendor.audio.crscallvolume.support=false
+ro.vendor.audio.dolby.spatial.profile=dynamic
 ro.vendor.audio.elus.enable=true
 ro.vendor.audio.record.customized.support=true
 ro.vendor.soundtrigger.dfs.support=1
