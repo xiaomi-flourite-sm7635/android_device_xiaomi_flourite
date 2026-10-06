@@ -3325,7 +3325,8 @@ vendor/lib64/vendor.xiaomi.hardware.aon-V1-ndk.so
 vendor/lib64/vendor.xiaomi.hardware.bgservice@1.0-impl.so
 vendor/lib64/vendor.xiaomi.hardware.bgservice@1.0.so
 vendor/lib64/vendor.xiaomi.hardware.display.mihwcextension-V1-ndk.so
-vendor/lib64/vendor.xiaomi.hardware.displayfeature_aidl-V2-ndk.so
+# Keep the stock display stack distinct from hardware/xiaomi's source interface.
+vendor/lib64/vendor.xiaomi.hardware.displayfeature_aidl-V2-ndk.so;MODULE_SUFFIX=_vendor
 vendor/lib64/vendor.xiaomi.hardware.dtool1-V1-ndk.so
 vendor/lib64/vendor.xiaomi.hardware.fingerprintextension-V1-ndk.so
 vendor/lib64/vendor.xiaomi.hardware.fx.tunnel-V1-ndk.so

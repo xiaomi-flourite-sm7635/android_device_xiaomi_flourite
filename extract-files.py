@@ -92,6 +92,7 @@ lib_fixups: lib_fixups_user_type = {
         'vendor.qti.imsrtpservice@3.0',
         'vendor.qti.imsrtpservice@3.1',
         'vendor.qti.qccvndhal_aidl-V1-ndk',
+        'vendor.xiaomi.hardware.displayfeature_aidl-V2-ndk',
     ): lib_fixup_vendor_suffix,
 }
 
