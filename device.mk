@@ -33,6 +33,17 @@ $(call inherit-product, packages/modules/Virtualization/apex/product_packages.mk
 # Qualcomm
 $(call inherit-product, hardware/qcom-caf/common/common.mk)
 
+# Keep Xiaomi's ABI-matched stock display stack. Some hardware/xiaomi forks
+# provide an alternate AIDL implementation with the same installed filename.
+# Rodin's optional trees depend on that implementation and are not inputs to
+# this product; exclude the complete group when sharing a checkout with rodin.
+PRODUCT_SOURCE_ROOT_DIRS += \
+    -hardware/xiaomi/interfaces/xiaomi/hardware/displayfeature_aidl \
+    -device/xiaomi/rodin \
+    -device/xiaomi/rodin-miuicamera \
+    -vendor/xiaomi/rodin \
+    -vendor/xiaomi/rodin-miuicamera
+
 # A/B
 AB_OTA_POSTINSTALL_CONFIG += \
     RUN_POSTINSTALL_system=true \
