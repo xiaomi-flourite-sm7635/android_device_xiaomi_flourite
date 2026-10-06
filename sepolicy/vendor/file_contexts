@@ -89,6 +89,9 @@
 /(odm|vendor|vendor/odm|system/vendor/odm)/bin/hw/android\.hardware\.gnss.*-service-qti u:object_r:vendor_hal_gnss_qti_exec:s0
 /data/vendor/ins(/.*)? u:object_r:vendor_ins_vendor_data_file:s0
 
+# IR: hal_ir_default_exec for the AOSP service is provided by platform policy.
+/dev/ir_spi u:object_r:vendor_ir_spi_device:s0
+
 # Mac Address
 /data/vendor/mac_addr(/.*)? u:object_r:vendor_mac_vendor_data_file:s0
 /vendor/bin/nv_mac u:object_r:vendor_wcnss_service_exec:s0

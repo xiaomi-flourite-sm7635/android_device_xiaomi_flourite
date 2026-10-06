@@ -1,0 +1,3 @@
+# SPDX-License-Identifier: Apache-2.0
+# Stock consumerir.qcom uses the ir-spi driver's character device.
+allow hal_ir_default vendor_ir_spi_device:chr_file { open read write ioctl };
