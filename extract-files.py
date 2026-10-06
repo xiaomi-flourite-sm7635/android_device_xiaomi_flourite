@@ -5,8 +5,6 @@
 #
 
 from extract_utils.fixups_blob import (
-    BlobFixupCtx,
-    File,
     blob_fixup,
     blob_fixups_user_type,
 )
@@ -19,14 +17,10 @@ from extract_utils.main import (
     ExtractUtils,
     ExtractUtilsModule,
 )
-from extract_utils.tools import (
-    llvm_objdump_path,
-)
-from extract_utils.utils import (
-    run_cmd,
-)
+from camera_graphicbuffer_fixup import fixup_camera_graphicbuffer
 
 namespace_imports = [
+    'device/xiaomi/flourite',
     'hardware/qcom-caf/common/libqti-perfd-client',
     'hardware/qcom-caf/sm8650',
     'hardware/qcom-caf/wlan',
@@ -36,33 +30,6 @@ namespace_imports = [
     'vendor/qcom/opensource/dataservices',
     'vendor/qcom/opensource/display',
 ]
-
-def blob_fixup_graphic_buffer_size(
-    ctx: BlobFixupCtx,
-    file: File,
-    file_path: str,
-    disassemble_symbols: [str],
-    *args,
-    **kwargs,
-):
-    for line in run_cmd(
-        [
-            llvm_objdump_path,
-            f'--disassemble-symbols={",".join(disassemble_symbols)}',
-            file_path,
-        ]
-    ).splitlines():
-        line = line.split(maxsplit=5)
-        if len(line) != 6:
-            continue
-
-        # The size of GraphicBuffer changed from 0x100 to 0xd30
-        offset, _, instruction, register, value, _ = line
-        if instruction == 'mov' and register[:-1] == 'w0' and value == '#0x100':
-            with open(file_path, 'rb+') as f:
-                f.seek(int(offset[:-1], 16))
-                f.write(b'\x00\xa6\x81\x52')  # AArch64 mov w0, #0xd30
-
 
 def lib_fixup_odm_suffix(lib: str, partition: str, *args, **kwargs):
     return f'{lib}_{partition}' if partition == 'odm' else None
@@ -96,7 +63,8 @@ lib_fixups: lib_fixups_user_type = {
 }
 
 blob_fixups: blob_fixups_user_type = {
-    # Current LLNDK libsync exports sync_wait without a symbol version.
+    # The current LLNDK libsync exports sync_wait without a symbol version.
+    # Keep the ABI and dependency intact; only drop the obsolete LIBSYNC tag.
     'vendor/lib64/com.qti.feature2.offlinestatsregeneration.so': blob_fixup()
         .clear_symbol_version('sync_wait'),
     'odm/etc/vintf/manifest/vendor.xiaomi.hardware.vibratorfeature.service.xml': blob_fixup()
@@ -185,39 +153,22 @@ blob_fixups: blob_fixups_user_type = {
             'libultrahdr.so',
             'libultrahdr_prebuilt.so'
     ),
-    (
-        'odm/lib64/hw/camera.qcom.so',
-        'odm/lib64/hw/com.qti.chi.override.so',
-        'odm/lib64/libchifeature2.so',
-    ): blob_fixup()
+    # These flourite camera blobs live in vendor. Unlike the old ODM stack,
+    # only libcameraopt imports the legacy, unmangled SetTaskProfiles symbol.
+    'vendor/lib64/libcameraopt.so': blob_fixup()
         .add_needed('libprocessgroup_shim.so'),
-    'odm/lib64/hw/camera.xiaomi.so': blob_fixup()
-        .add_needed('libprocessgroup_shim.so')
-        .replace_needed(
-            'libtinyxml2.so',
-            'libtinyxml2-v34.so'
-        )
-        .call(
-            blob_fixup_graphic_buffer_size,
-            [
-                '_ZN5mihal9GraBufferC2EjjimNSt3__112basic_stringIcNS1_11char_traitsIcEENS1_9allocatorIcEEEE',
-                '_ZN5mihal9GraBufferC2EPKNS_6StreamENSt3__112basic_stringIcNS4_11char_traitsIcEENS4_9allocatorIcEEEE',
-                '_ZN5mihal9GraBufferC2EjjimPK13native_handle',
-                '_ZN5mihal9GraBufferC2EPKNS_6StreamEPK13native_handle',
-            ],
-    ),
-    'odm/lib64/com.qti.feature2.anchorsync.so': blob_fixup()
-        .replace_needed(
-            'libtinyxml2.so',
-            'libtinyxml2-v34.so'
-    ),
+    # VNDK 34 camera objects reserve 0x100 bytes; current libui needs 0xd30.
+    # Patch only audited allocation instructions, with normalized text hashes.
     (
-        'odm/lib64/libcamxcommonutils.so',
-        'odm/lib64/libmialgoengine.so',
-        'vendor/lib64/libcameraopt.so',
+        'odm/lib64/camera/components/com.jigan.node.videobokeh.so',
+        'odm/lib64/camera/plugins/com.xiaomi.plugin.filter.so',
+        'vendor/lib64/libcom.xiaomi.grallocutils.so',
+        'vendor/lib64/libcom.xiaomi.mawutils.so',
+        'vendor/lib64/libcom.xiaomi.mawutilsold.so',
     ): blob_fixup()
-        .add_needed('libprocessgroup_shim.so'),
+        .call(fixup_camera_graphicbuffer),
     'vendor/lib64/libmicamera_hal_core.so': blob_fixup()
+        .call(fixup_camera_graphicbuffer)
         .add_needed('libui_shim.so'),
     (
         'odm/lib64/anc.hal.so',

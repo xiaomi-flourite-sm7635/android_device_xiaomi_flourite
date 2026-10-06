@@ -20,6 +20,16 @@ prebuilt_etc_xml {
     soc_specific: true,
 }
 
+// Compile-time guard for the pinned camera allocation fixups.
+cc_library_static {
+    name: "flourite_camera_abi_check",
+    vendor: true,
+    compile_multilib: "64",
+    srcs: ["camera/graphicbuffer_abi_check.cpp"],
+    shared_libs: ["libui"],
+    cflags: ["-Wall", "-Werror"],
+}
+
 cc_defaults {
     name: "flourite_first_stage_diag_defaults",
     srcs: ["diagnostics/first_stage_diag.c"],
