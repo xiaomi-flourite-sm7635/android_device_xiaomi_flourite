@@ -2449,6 +2449,7 @@ vendor/lib64/camera/fdconfigpreview.bin
 vendor/lib64/camera/fdconfigpreviewlite.bin
 vendor/lib64/camera/fdconfigvideo.bin
 vendor/lib64/camera/fdconfigvideolite.bin
+vendor/lib64/camera/libmicamvendorcustom.so
 vendor/lib64/camx.device-impl.so
 vendor/lib64/camx.provider-impl.so
 vendor/lib64/com.fingerprints.extension3-V1-ndk.so
@@ -2470,6 +2471,7 @@ vendor/lib64/com.qti.feature2.mfsr.milos.so;DISABLE_CHECKELF
 vendor/lib64/com.qti.feature2.mfsr.so;DISABLE_CHECKELF
 vendor/lib64/com.qti.feature2.ml.so;DISABLE_CHECKELF
 vendor/lib64/com.qti.feature2.mux.so;DISABLE_CHECKELF
+vendor/lib64/com.qti.feature2.offlinestatsregeneration.so;DISABLE_CHECKELF
 vendor/lib64/com.qti.feature2.qcfa.so;DISABLE_CHECKELF
 vendor/lib64/com.qti.feature2.rawhdr.so;DISABLE_CHECKELF
 vendor/lib64/com.qti.feature2.realtimeserializer.so;DISABLE_CHECKELF
@@ -2690,6 +2692,7 @@ vendor/lib64/libcom.xiaomi.ionutils.so
 vendor/lib64/libcom.xiaomi.mawutils.so
 vendor/lib64/libcom.xiaomi.mawutilsold.so;DISABLE_CHECKELF
 vendor/lib64/libcom.xiaomi.metadatautils.so
+vendor/lib64/libcom.xiaomi.offlinefeatureintf.so;DISABLE_CHECKELF
 vendor/lib64/libcom.xiaomi.pluginutils.so
 vendor/lib64/libcom.xiaomi.qimagebuffer.so;DISABLE_CHECKELF
 vendor/lib64/libcom.xiaomi.sensorpolicy.so
@@ -2833,6 +2836,7 @@ vendor/lib64/libmialgo_ai_vision.so
 vendor/lib64/libmialgo_globalsaliency.so
 vendor/lib64/libmialgo_video_colourkeeping.so
 vendor/lib64/libmialgoengine.so
+vendor/lib64/libmialgoengine_custom.so
 vendor/lib64/libmibokeh_845_video.so;DISABLE_CHECKELF
 vendor/lib64/libmicamera_adapter.so
 vendor/lib64/libmicamera_aidl_device.so

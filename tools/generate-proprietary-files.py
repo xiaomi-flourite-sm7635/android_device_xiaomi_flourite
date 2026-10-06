@@ -396,18 +396,26 @@ STOCK_SONAME_ALIASES = {
 }
 
 # Proprietary files not discoverable from reference lists or ELF dependency
-# closure. Camera extmodels are loaded from ODM JSON configuration, and the
-# intent-aware AIDL Java API is consumed dynamically by Xiaomi components.
+# closure. Camera extmodels are loaded from ODM JSON configuration,
+# libmialgoengine_custom is dlopened by MiaCustomizationAdapter during capture,
+# libmicamvendorcustom is dlopened by VendorCustomizationManager for Supernight,
+# libcom.xiaomi.offlinefeatureintf is dlopened by ChiOfflinePlugin for stills
+# (and depends on com.qti.feature2.offlinestatsregeneration),
+# and the intent-aware AIDL Java API is consumed dynamically by Xiaomi components.
 EXTRA_STOCK_FILES = (
     "system/lib64/libheif.so",
     "system/lib64/vendor.qti.diaghal-V1-ndk.so",
     "system_ext/etc/permissions/vendor.xiaomi.hardware.aidl.intentaware-V1-java-permission.xml",
     "system_ext/framework/vendor.xiaomi.hardware.aidl.intentaware-V1-java.jar",
     "vendor/etc/vintf/manifest/vendor.xiaomi.hardware.aidl.intentaware-service.xml",
+    "vendor/lib64/camera/libmicamvendorcustom.so",
+    "vendor/lib64/com.qti.feature2.offlinestatsregeneration.so",
     "vendor/lib64/com.xiaomi.camhal.extmodel.catch_log_sys.so",
     "vendor/lib64/com.xiaomi.camhal.extmodel.ec_diag_sys.so",
     "vendor/lib64/com.xiaomi.camhal.extmodel.ec_executor.so",
     "vendor/lib64/com.xiaomi.camhal.extmodel.intent_aware_sys.so",
+    "vendor/lib64/libmialgoengine_custom.so",
+    "vendor/lib64/libcom.xiaomi.offlinefeatureintf.so",
     "vendor/lib64/vendor.xiaomi.hardware.aidl.intentaware-V1-impl.so",
     "vendor/lib64/vendor.xiaomi.hardware.aidl.intentaware-V1-ndk_platform.so",
 )
