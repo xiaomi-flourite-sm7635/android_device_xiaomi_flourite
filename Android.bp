@@ -36,6 +36,7 @@ cc_library_shared {
     compile_multilib: "64",
     srcs: ["camera/raw_metadata.cpp"],
     header_libs: ["libcutils_headers"],
+    static_libs: ["flourite_camera_abi_check"],
     shared_libs: [
         "//vendor/xiaomi/flourite:libcom.xiaomi.metadatautils",
         "libcamera_metadata",
@@ -44,52 +45,6 @@ cc_library_shared {
     ],
     cpp_std: "c++17",
     cflags: ["-Wall", "-Wextra", "-Werror", "-fvisibility=hidden"],
-}
-
-cc_defaults {
-    name: "flourite_first_stage_diag_defaults",
-    srcs: ["diagnostics/first_stage_diag.c"],
-    cflags: [
-        "-Wall",
-        "-Werror",
-        "-Wextra",
-    ],
-    static_executable: true,
-    system_shared_libs: [],
-    installable: false,
-}
-
-cc_binary {
-    name: "flourite_first_stage_diag_bin",
-    defaults: ["flourite_first_stage_diag_defaults"],
-    ramdisk: true,
-}
-
-cc_binary {
-    name: "flourite_first_stage_diag_recovery_bin",
-    defaults: ["flourite_first_stage_diag_defaults"],
-    recovery: true,
-}
-
-// first_stage_console executes this exact root path before first-stage mounts.
-// A prebuilt_root wrapper is required because Soong only permits first-stage
-// init itself to set install_in_root on a cc_binary.
-prebuilt_root {
-    name: "flourite_first_stage_diag",
-    src: ":flourite_first_stage_diag_bin",
-    filename: "first_stage.sh",
-    ramdisk: true,
-    install_in_root: true,
-}
-
-// vendor_boot carries the same bootconfig into recovery. Install the hook
-// there as well so it can release init without opening a blocking console.
-prebuilt_root {
-    name: "flourite_first_stage_diag_recovery",
-    src: ":flourite_first_stage_diag_recovery_bin",
-    filename: "first_stage.sh",
-    recovery: true,
-    install_in_root: true,
 }
 
 install_symlink {

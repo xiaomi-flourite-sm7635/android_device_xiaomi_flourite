@@ -123,21 +123,6 @@ BOARD_BOOTCONFIG := \
     androidboot.vendor.qspa=true \
     androidboot.hypervisor.protected_vm.supported=false
 
-# Bring-up-only first-stage diagnostics. The matching system/core init patch
-# invokes the ramdisk watchdog before kernel-module loading, persists the
-# failed-boot trace in Xiaomi's oops partition, and returns fatal init failures
-# to recovery for collection.
-ifeq ($(FLOURITE_FIRST_STAGE_DIAGNOSTICS),true)
-BOARD_KERNEL_CMDLINE += \
-    printk.devkmsg=on
-BOARD_BOOTCONFIG += \
-    androidboot.first_stage_console=1 \
-    androidboot.first_stage_console_early=1 \
-    androidboot.init_fatal_reboot_target=recovery
-BOARD_SEPOLICY_M4DEFS += \
-    flourite_first_stage_diagnostics=true
-endif
-
 # The stock 6.1.138 image/modules are the bootable default. Xiaomi's
 # published 6.1.68 source can be selected explicitly for compile testing.
 ifeq ($(FLOURITE_BUILD_KERNEL_FROM_SOURCE),true)
