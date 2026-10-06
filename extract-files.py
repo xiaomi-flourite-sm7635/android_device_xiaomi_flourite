@@ -127,10 +127,17 @@ blob_fixups: blob_fixups_user_type = {
         'odm/lib64/camera/plugins/com.xiaomi.plugin.anchor.so',
         'odm/lib64/com.qti.feature2.anchorsync.so',
         'odm/lib64/hw/displayfeature.default.so',
+        # Stock camera code uses the VNDK 34 XMLDocument layout (0x308).
+        # Current tinyxml2 writes past that allocation (0x370). Keep every
+        # camera importer, including the dlopened anchor feature, on v34.
+        'vendor/bin/hw/vendor.qti.camera.provider-service_64',
         'vendor/bin/hw/vendor.qti.hardware.display.composer-service',
+        'vendor/lib64/com.qti.feature2.anchorsync.so',
         'vendor/lib64/libaudiocloudctrl.so',
         'vendor/lib64/libdpps.so',
         'vendor/lib64/liblearningmodule.so',
+        'vendor/lib64/libmicamera_aidl_provider.so',
+        'vendor/lib64/libsimulation.so',
         'vendor/lib64/libsnapdragoncolor-manager.so',
     ): blob_fixup()
         .replace_needed(
@@ -169,7 +176,8 @@ blob_fixups: blob_fixups_user_type = {
         .call(fixup_camera_graphicbuffer),
     'vendor/lib64/libmicamera_hal_core.so': blob_fixup()
         .call(fixup_camera_graphicbuffer)
-        .add_needed('libui_shim.so'),
+        .add_needed('libui_shim.so')
+        .replace_needed('libtinyxml2.so', 'libtinyxml2-v34.so'),
     (
         'odm/lib64/anc.hal.so',
         'vendor/bin/qseecom_sample_client',
