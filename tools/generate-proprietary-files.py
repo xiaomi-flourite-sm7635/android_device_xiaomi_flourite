@@ -762,11 +762,24 @@ def mark_allocator_v1_blobs(
             entries[path] = f"{line};DISABLE_CHECKELF"
 
 
+def stock_version(stock_root: Path) -> str:
+    """Never label a future extraction as the old, hard-coded firmware."""
+    properties = dict(
+        line.split("=", 1)
+        for line in (stock_root / "vendor/build.prop").read_text().splitlines()
+        if "=" in line and not line.lstrip().startswith("#")
+    )
+    version = properties.get("ro.vendor.build.version.incremental", "")
+    if not re.fullmatch(r"[A-Za-z0-9_.-]+", version):
+        raise ValueError("Missing or invalid stock vendor incremental version")
+    return version
+
+
 def write_list(output: Path, entries: dict[str, str], stock_root: Path) -> None:
     lines = [
         "## Proprietary files for flourite.",
         "##",
-        "## Generated from Xiaomi OS3.0.304.0.WPRMIXM (Android 16) with",
+        f"## Generated from Xiaomi {stock_version(stock_root)} with",
         "## SM7635/volcano references, then closed over stock ELF dependencies.",
         "## Regenerate with tools/generate-proprietary-files.py and prune only",
         "## after a successful build plus on-device hardware validation.",
