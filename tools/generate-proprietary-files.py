@@ -401,6 +401,8 @@ STOCK_SONAME_ALIASES = {
 # libmicamvendorcustom is dlopened by VendorCustomizationManager for Supernight,
 # libcom.xiaomi.offlinefeatureintf is dlopened by ChiOfflinePlugin for stills
 # (and depends on com.qti.feature2.offlinestatsregeneration),
+# SNPE loads its own HTP prepare/stub/skeleton at runtime for camera inference
+# (the similarly named QNN libraries do not supply these filenames),
 # and the intent-aware AIDL Java API is consumed dynamically by Xiaomi components.
 EXTRA_STOCK_FILES = (
     "system/lib64/libheif.so",
@@ -408,12 +410,15 @@ EXTRA_STOCK_FILES = (
     "system_ext/etc/permissions/vendor.xiaomi.hardware.aidl.intentaware-V1-java-permission.xml",
     "system_ext/framework/vendor.xiaomi.hardware.aidl.intentaware-V1-java.jar",
     "vendor/etc/vintf/manifest/vendor.xiaomi.hardware.aidl.intentaware-service.xml",
+    "vendor/lib/rfsa/adsp/libSnpeHtpV73Skel.so",
     "vendor/lib64/camera/libmicamvendorcustom.so",
     "vendor/lib64/com.qti.feature2.offlinestatsregeneration.so",
     "vendor/lib64/com.xiaomi.camhal.extmodel.catch_log_sys.so",
     "vendor/lib64/com.xiaomi.camhal.extmodel.ec_diag_sys.so",
     "vendor/lib64/com.xiaomi.camhal.extmodel.ec_executor.so",
     "vendor/lib64/com.xiaomi.camhal.extmodel.intent_aware_sys.so",
+    "vendor/lib64/libSnpeHtpPrepare.so",
+    "vendor/lib64/libSnpeHtpV73Stub.so",
     "vendor/lib64/libmialgoengine_custom.so",
     "vendor/lib64/libcom.xiaomi.offlinefeatureintf.so",
     "vendor/lib64/vendor.xiaomi.hardware.aidl.intentaware-V1-impl.so",

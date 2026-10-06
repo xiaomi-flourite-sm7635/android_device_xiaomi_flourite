@@ -2321,6 +2321,7 @@ vendor/gpu/kbc/unified_ksqs.bin
 vendor/lib/rfsa/adsp/chre_qsh_shim.so
 vendor/lib/rfsa/adsp/libQnnHtpV73.so
 vendor/lib/rfsa/adsp/libQnnHtpV73Skel.so
+vendor/lib/rfsa/adsp/libSnpeHtpV73Skel.so
 vendor/lib/rfsa/adsp/libadsp_jpege_skel.so
 vendor/lib/rfsa/adsp/libarc_htp_driver_skel.so
 vendor/lib/rfsa/adsp/libbitml_nsp_skel.so
@@ -2594,6 +2595,8 @@ vendor/lib64/libQtiRilLoadable.so
 vendor/lib64/libSNPE.so
 vendor/lib64/libSNPESample.so
 vendor/lib64/libSensorsInterface.so
+vendor/lib64/libSnpeHtpPrepare.so
+vendor/lib64/libSnpeHtpV73Stub.so
 vendor/lib64/libTrustedInputAIDL.so
 vendor/lib64/libTrustedInputUtils.so
 vendor/lib64/libTrustedUIAIDL.so
