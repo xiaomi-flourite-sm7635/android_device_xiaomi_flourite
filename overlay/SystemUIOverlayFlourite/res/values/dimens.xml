@@ -6,7 +6,8 @@
 <resources>
     <dimen name="keyguard_indication_margin_bottom">145dp</dimen>
     <dimen name="rounded_corner_content_padding">84px</dimen>
-    <dimen name="status_bar_padding_top">38px</dimen>
+    <!-- Stock uses 38px top and 20px bottom; AOSP only consumes the top inset. -->
+    <dimen name="status_bar_padding_top">18px</dimen>
 
     <!-- Microns/ums (1000 um = 1mm) per pixel for the given device. If unspecified, UI that
          relies on this value will not be sized correctly. -->
