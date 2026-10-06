@@ -20,6 +20,7 @@ from extract_utils.main import (
 from camera_graphicbuffer_fixup import fixup_camera_graphicbuffer
 from camera_raw_metadata_fixup import fixup_camera_raw_metadata, verify_camera_raw_metadata
 from camera_night_metadata_fixup import fixup_camera_night_metadata
+from camera_night_tuning_fixup import fixup_camera_night_tuning
 
 namespace_imports = [
     'device/xiaomi/flourite',
@@ -65,6 +66,12 @@ lib_fixups: lib_fixups_user_type = {
 }
 
 blob_fixups: blob_fixups_user_type = {
+    # Dedicated Night profile for OVX8000; leave S5KHPE tuning unchanged.
+    (
+        'odm/lib64/camera/com.qti.tuned.flourite_sunny_ovx8000_wide_gl_ii.bin',
+        'odm/lib64/camera/com.qti.tuned.flourite_ofilm_ovx8000_wide_gl_i.bin',
+    ): blob_fixup()
+        .call(fixup_camera_night_tuning),
     # Keep CHI sensor clients on the legacy NCS transport.
     (
         'odm/etc/camera/camxoverridesettings.txt',
