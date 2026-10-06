@@ -148,6 +148,7 @@ PRODUCT_PACKAGES += \
 # Camera
 PRODUCT_PACKAGES += \
     flourite_camera_abi_check \
+    libflourite_camera_metadata \
     libcamera2ndk_vendor
 
 # ISPv4

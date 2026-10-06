@@ -18,6 +18,7 @@ from extract_utils.main import (
     ExtractUtilsModule,
 )
 from camera_graphicbuffer_fixup import fixup_camera_graphicbuffer
+from camera_raw_metadata_fixup import fixup_camera_raw_metadata, verify_camera_raw_metadata
 
 namespace_imports = [
     'device/xiaomi/flourite',
@@ -176,8 +177,11 @@ blob_fixups: blob_fixups_user_type = {
         .call(fixup_camera_graphicbuffer),
     'vendor/lib64/libmicamera_hal_core.so': blob_fixup()
         .call(fixup_camera_graphicbuffer)
+        .call(fixup_camera_raw_metadata)
+        .add_needed('libflourite_camera_metadata.so')
         .add_needed('libui_shim.so')
-        .replace_needed('libtinyxml2.so', 'libtinyxml2-v34.so'),
+        .replace_needed('libtinyxml2.so', 'libtinyxml2-v34.so')
+        .call(verify_camera_raw_metadata),
     (
         'odm/lib64/anc.hal.so',
         'vendor/bin/qseecom_sample_client',

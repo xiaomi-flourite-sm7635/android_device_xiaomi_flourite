@@ -1,5 +1,5 @@
 # SPDX-License-Identifier: Apache-2.0
-"""Pinned GraphicBuffer allocation fixes for flourite 304 camera blobs.
+"""Pinned GraphicBuffer allocation fixes for flourite 304/306 camera blobs.
 
 Only audited operator-new size arguments are changed. A normalized .text hash
 rejects different firmware and unrelated binary edits. Reapplication is safe.
@@ -41,6 +41,16 @@ CAMERA_ALLOCATIONS = {
     ),
 }
 
+# OS3.0.306.0 changes the camera core. Both constructors still pass their
+# operator-new allocation directly to the same GraphicBuffer constructors;
+# the remaining five audited .text sections are unchanged from 304.
+CAMERA_ALLOCATIONS_306 = {
+    'vendor/lib64/libmicamera_hal_core.so': (
+        0x115000, 0x370C08, (0x21ED18, 0x21F4CC),
+        '8e04d5d733fa3220de6cb3e0c1a15be1addbdb277833bc29ae511e8b38d22b32',
+    ),
+}
+
 
 def patched_text(data, spec):
     start, size, addresses, expected_hash = spec
@@ -66,6 +76,13 @@ def fixup_camera_graphicbuffer(ctx, file, file_path, *args, **kwargs):
     from extract_utils.elf_parser import ELFFile, EM
 
     spec = CAMERA_ALLOCATIONS[file.dst]
+    if file.dst in CAMERA_ALLOCATIONS_306:
+        # Select by the actual ELF .text size; hashes still validate all bytes.
+        from camera_raw_metadata_fixup import CameraElf
+        from pathlib import Path
+        elf_view = CameraElf(Path(file_path).read_bytes())
+        if elf_view.sections['.text'][5] == CAMERA_ALLOCATIONS_306[file.dst][1]:
+            spec = CAMERA_ALLOCATIONS_306[file.dst]
     start, size, addresses, _ = spec
     with open(file_path, 'rb') as stream:
         elf = ELFFile(stream)

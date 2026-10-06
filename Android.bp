@@ -30,6 +30,22 @@ cc_library_static {
     cflags: ["-Wall", "-Werror"],
 }
 
+cc_library_shared {
+    name: "libflourite_camera_metadata",
+    vendor: true,
+    compile_multilib: "64",
+    srcs: ["camera/raw_metadata.cpp"],
+    header_libs: ["libcutils_headers"],
+    shared_libs: [
+        "//vendor/xiaomi/flourite:libcom.xiaomi.metadatautils",
+        "libcamera_metadata",
+        "libdl",
+        "liblog",
+    ],
+    cpp_std: "c++17",
+    cflags: ["-Wall", "-Wextra", "-Werror", "-fvisibility=hidden"],
+}
+
 cc_defaults {
     name: "flourite_first_stage_diag_defaults",
     srcs: ["diagnostics/first_stage_diag.c"],

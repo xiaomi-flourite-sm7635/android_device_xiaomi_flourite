@@ -71,6 +71,9 @@ ro.bluetooth.a2dp_offload.supported=true
 
 # Camera
 camera.disable_zsl_mode=true
+# Keep proprietary/padded JPEG sizes out of the standard stream table.
+# libflourite_camera_metadata adds RAW16 only, including for an R6 dirty update.
+persist.vendor.camera.setDngTag=false
 ro.camera.enableCamera1MaxZsl=1
 
 # DPM
