@@ -528,3 +528,6 @@ PRODUCT_COPY_FILES += \
 
 # Vendor
 $(call inherit-product, vendor/xiaomi/flourite/flourite-vendor.mk)
+
+# Optional stock Xiaomi Camera companion tree; Aperture remains a fallback.
+$(call inherit-product-if-exists, device/xiaomi/flourite-miuicamera/device.mk)
