@@ -14,3 +14,6 @@ type thermal_data_file, data_file_type, file_type;
 type vendor_modem_data_file, data_file_type, file_type;
 type vendor_ins_vendor_data_file, data_file_type, file_type;
 type proc_walt, fs_type, proc_type;
+
+# Subsystem restart controls used by the stock ssr_setup utility.
+type vendor_sysfs_ssr_coredump_toggle, fs_type, sysfs_type;

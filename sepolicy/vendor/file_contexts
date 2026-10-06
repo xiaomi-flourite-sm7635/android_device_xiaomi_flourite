@@ -122,6 +122,14 @@
 # NFC
 /odm/bin/hw/android\.hardware\.nqnfc-service\.nxp u:object_r:hal_nfc_default_exec:s0
 
+# Subsystem restart: keep the coredump controls separate from generic sysfs.
+/sys/devices/platform/soc/3000000\.remoteproc-adsp/remoteproc/remoteproc[0-9]+/coredump u:object_r:vendor_sysfs_ssr_coredump_toggle:s0
+/sys/devices/platform/soc/32300000\.remoteproc-cdsp/remoteproc/remoteproc[0-9]+/coredump u:object_r:vendor_sysfs_ssr_coredump_toggle:s0
+/sys/devices/platform/soc/4080000\.remoteproc-mss/remoteproc/remoteproc[0-9]+/coredump u:object_r:vendor_sysfs_ssr_coredump_toggle:s0
+/sys/devices/platform/soc/9bb00000\.remoteproc-wpss/remoteproc/remoteproc[0-9]+/coredump u:object_r:vendor_sysfs_ssr_coredump_toggle:s0
+/sys/devices/platform/soc/2400000\.remoteproc-slpi/remoteproc/remoteproc[0-9]+/coredump u:object_r:vendor_sysfs_ssr_coredump_toggle:s0
+/sys/devices/platform/soc/188101c\.remoteproc-spss/remoteproc/remoteproc[0-9]+/coredump u:object_r:vendor_sysfs_ssr_coredump_toggle:s0
+
 # Touch
 /dev/xiaomi-touch u:object_r:touchfeature_device:s0
 /odm/bin/hw/vendor\.xiaomi\.hw\.touchfeature-service u:object_r:hal_touchfeature_xiaomi_default_exec:s0

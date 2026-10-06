@@ -1,0 +1,3 @@
+# Stock ssr_setup opens both recovery and coredump before enabling SSR.
+# Without this access it skips the subsystem, leaving recovery disabled.
+allow vendor_ssr_setup vendor_sysfs_ssr_coredump_toggle:file rw_file_perms;
