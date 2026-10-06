@@ -111,8 +111,8 @@ TARGET_KERNEL_CONFIG := \
 BOARD_KERNEL_CMDLINE := \
     video=vfb:640x400,bpp=32,memsize=3072000 \
     sysctl.kernel.firmware_config.force_sysfs_fallback=1 \
-    swinfo.fingerprint=flourite:14/OS3.0.304.0.WPRMIXM:user \
-    mtdoops.fingerprint=flourite:14/OS3.0.304.0.WPRMIXM:user \
+    swinfo.fingerprint=flourite:14/OS3.0.306.0.WPRMIXM:user \
+    mtdoops.fingerprint=flourite:14/OS3.0.306.0.WPRMIXM:user \
     erofs.reserved_pages=64
 
 BOARD_BOOTCONFIG := \
@@ -206,8 +206,8 @@ TARGET_USERIMAGES_USE_F2FS := true
 ENABLE_VENDOR_RIL_SERVICE := true
 
 # Security patch levels from the stock release
-BOOT_SECURITY_PATCH := 2026-07-01
-VENDOR_SECURITY_PATCH := 2026-02-01
+BOOT_SECURITY_PATCH := 2026-08-01
+VENDOR_SECURITY_PATCH := 2026-08-01
 
 # SELinux
 include device/lineage/sepolicy/libperfmgr/sepolicy.mk

@@ -1,6 +1,6 @@
 ## Proprietary files for flourite.
 ##
-## Generated from Xiaomi OS3.0.304.0.WPRMIXM (Android 16) with
+## Refreshed from Xiaomi OS3.0.306.0.WPRMIXM (Android 16), preserving the
 ## SM7635/volcano references, then closed over stock ELF dependencies.
 ## Regenerate with tools/generate-proprietary-files.py and prune only
 ## after a successful build plus on-device hardware validation.

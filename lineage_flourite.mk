@@ -24,8 +24,8 @@ PRODUCT_SYSTEM_NAME := flourite_global
 PRODUCT_SYSTEM_DEVICE := flourite
 
 PRODUCT_BUILD_PROP_OVERRIDES += \
-    BuildDesc="flourite_global-user 16 BP2A.250605.031.A3 OS3.0.304.0.WPRMIXM release-keys" \
-    BuildFingerprint=Redmi/flourite/miproduct:16/BP2A.250605.031.A3/OS3.0.304.0.WPRMIXM:user/release-keys \
+    BuildDesc="flourite_global-user 16 BP2A.250605.031.A3 OS3.0.306.0.WPRMIXM release-keys" \
+    BuildFingerprint=Redmi/flourite/miproduct:16/BP2A.250605.031.A3/OS3.0.306.0.WPRMIXM:user/release-keys \
     DeviceName=$(PRODUCT_SYSTEM_DEVICE) \
     DeviceProduct=$(PRODUCT_SYSTEM_NAME) \
     SystemDevice=$(PRODUCT_SYSTEM_DEVICE) \

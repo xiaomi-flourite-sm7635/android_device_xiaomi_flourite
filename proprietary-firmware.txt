@@ -1,4 +1,4 @@
-## Firmware images from flourite OS3.0.304.0.WPRMIXM.
+## Firmware images from flourite OS3.0.306.0.WPRMIXM.
 
 abl.img;AB
 aop.img;AB
