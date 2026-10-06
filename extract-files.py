@@ -19,6 +19,7 @@ from extract_utils.main import (
 )
 from camera_graphicbuffer_fixup import fixup_camera_graphicbuffer
 from camera_raw_metadata_fixup import fixup_camera_raw_metadata, verify_camera_raw_metadata
+from camera_night_metadata_fixup import fixup_camera_night_metadata
 
 namespace_imports = [
     'device/xiaomi/flourite',
@@ -173,6 +174,8 @@ blob_fixups: blob_fixups_user_type = {
     # only libcameraopt imports the legacy, unmangled SetTaskProfiles symbol.
     'vendor/lib64/libcameraopt.so': blob_fixup()
         .add_needed('libprocessgroup_shim.so'),
+    'odm/lib64/camera/plugins/com.xiaomi.plugin.arcsoftsll.so': blob_fixup()
+        .call(fixup_camera_night_metadata),
     # VNDK 34 camera objects reserve 0x100 bytes; current libui needs 0xd30.
     # Patch only audited allocation instructions, with normalized text hashes.
     (
