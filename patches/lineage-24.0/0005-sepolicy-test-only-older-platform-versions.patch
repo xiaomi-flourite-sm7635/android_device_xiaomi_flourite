@@ -1,0 +1,29 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: lufrz <314570110+lufrz@users.noreply.github.com>
+Date: Sat, 3 Oct 2026 01:12:00 +0200
+Subject: [PATCH] sepolicy: skip the current platform compatibility test
+
+When PLATFORM_SEPOLICY_VERSION is 202604, this is the current exported API,
+not a previous API in PLATFORM_SEPOLICY_COMPAT_VERSIONS. The 202604 mapping
+is generated from current policy, rather than the historical compatibility
+files used by treble_sepolicy_tests_202604.
+
+Match this version regardless of ASAN and neverallow settings, just as the
+existing guards on plat_202604.cil and 202604.compat.cil already do. Keep
+all previous-version tests and all enforcement checks enabled.
+---
+ Android.bp | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/Android.bp b/Android.bp
+--- a/Android.bp
++++ b/Android.bp
+@@ -1258,7 +1258,7 @@ phony {
+         product_variable("selinux_ignore_neverallows"),
+     ), {
+-        ("202604", true, true): [],
++        ("202604", default, default): [],
+         (default, true, true): [],
+         (default, default, default): [
+             "treble_sepolicy_tests_202604",
+         ],
