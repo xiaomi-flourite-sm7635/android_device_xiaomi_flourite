@@ -64,6 +64,14 @@ lib_fixups: lib_fixups_user_type = {
 }
 
 blob_fixups: blob_fixups_user_type = {
+    # Keep CHI sensor clients on the legacy NCS transport.
+    (
+        'odm/etc/camera/camxoverridesettings.txt',
+        'odm/etc/camera/camxoverridesettings_global.txt',
+        'odm/etc/camera/camxoverridesettings_global_poco.txt',
+    ): blob_fixup()
+        .regex_replace(r'(?m)^[ \t]*enableNCSQSEE2[ \t]*=[^\r\n]*(?:\r?\n|$)', '')
+        .regex_replace(r'\A', 'enableNCSQSEE2=FALSE\n'),
     # The current LLNDK libsync exports sync_wait without a symbol version.
     # Keep the ABI and dependency intact; only drop the obsolete LIBSYNC tag.
     'vendor/lib64/com.qti.feature2.offlinestatsregeneration.so': blob_fixup()
