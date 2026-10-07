@@ -76,6 +76,18 @@ camera.disable_zsl_mode=true
 persist.vendor.camera.setDngTag=false
 ro.camera.enableCamera1MaxZsl=1
 
+# Camera logging: retain warnings and errors.
+log.tag.CamX=W
+log.tag.ChiX=W
+log.tag.CHIUSECASE=W
+log.tag.MAW=W
+log.tag.MiCamHAL=W
+log.tag.MiCamAdapter=W
+log.tag.MiCamService=W
+log.tag.CHISWHME=W
+log.tag.GME=W
+log.tag.CHIHWCFGIPE=W
+
 # DPM
 persist.vendor.dpm.vndr.feature=1
 persist.vendor.dpm.vndr.halservice.enable=1
