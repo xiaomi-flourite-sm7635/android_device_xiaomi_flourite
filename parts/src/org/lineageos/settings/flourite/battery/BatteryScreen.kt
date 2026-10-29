@@ -125,6 +125,7 @@ fun BatteryScreen(onBack: () -> Unit) {
                     snapshot.status == BatteryManager.BATTERY_STATUS_CHARGING)
             }
             item("live_section") { PartsCategoryTitle(stringResource(R.string.battery_live_section)) }
+            item("charge_pause") { ChargePauseCard(resumed) }
             item("temperature_voltage") {
                 MetricRow(
                     Metric(stringResource(R.string.battery_temperature), temperature,

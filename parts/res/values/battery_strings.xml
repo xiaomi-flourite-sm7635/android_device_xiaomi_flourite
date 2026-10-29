@@ -1,6 +1,17 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!-- SPDX-License-Identifier: Apache-2.0 -->
 <resources>
+    <string name="charge_pause_title">Bypass charging (experimental)</string>
+    <string name="charge_pause_summary">Requests a zero battery charging-current limit without suspending USB input. This does not confirm hardware battery isolation. Thermal protections remain enabled.</string>
+    <string name="charge_pause_off">Off — no charging pause requested</string>
+    <string name="charge_pause_active">Zero charging-current limit confirmed by firmware</string>
+    <string name="charge_pause_pending">Restoration pending — normal charging is not confirmed. Keep the charger connected and retry restoring.</string>
+    <string name="charge_pause_unavailable">Control unavailable. Requires the matching kernel and ROM permissions; an unreadable state does not mean off.</string>
+    <string name="charge_pause_busy">Checking the charging controller…</string>
+    <string name="charge_pause_failed">The operation could not be confirmed. Check the state above. To enable, connect a charger with battery at 30–95%, temperature at 20–40 °C and health reported as good. The firmware may not support pausing.</string>
+    <string name="charge_pause_restore">Restore normal charging</string>
+    <string name="charge_pause_enable">Try charging pause</string>
+    <string name="charge_pause_warning">Experimental: verify the current and battery level with a wall charger. The battery may still supply power if USB input is insufficient.\n\nThe kernel checks every 5 seconds while awake and attempts to restore the previous limit after 30 minutes, unplugging, unsafe readings or a charging-service restart. It does not hold the phone awake; checks resume after sleep. Other charging controls take precedence.\n\nNot saved across boots. Restore before rebooting or flashing; forced resets and firmware failures can prevent restoration. Stop testing if charging fails to resume.</string>
     <string name="battery_title">Battery</string>
     <string name="battery_level">Battery level</string>
     <string name="battery_status">Charging status</string>
