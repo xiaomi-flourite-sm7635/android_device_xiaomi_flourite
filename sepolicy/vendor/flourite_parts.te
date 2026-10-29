@@ -2,6 +2,12 @@
 type vendor_flourite_parts_control, fs_type, sysfs_type;
 type vendor_flourite_parts_status, fs_type, sysfs_type;
 type vendor_flourite_parts_cpu_online, fs_type, sysfs_type;
+type vendor_flourite_charge_pause, fs_type, sysfs_type;
+
+# Only the bounded kernel session, never generic battery or input-suspend writes.
+allow flourite_parts_app vendor_flourite_charge_pause:file rw_file_perms;
+allow flourite_parts_app vendor_sysfs_battery_supply:dir search;
+allow vendor_init vendor_flourite_charge_pause:file setattr;
 
 # Parts owns only its dedicated constraints, not the Power HAL's ordinary limits.
 allow flourite_parts_app vendor_flourite_parts_control:file rw_file_perms;
