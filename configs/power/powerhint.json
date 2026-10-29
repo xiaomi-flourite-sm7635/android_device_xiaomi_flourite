@@ -110,12 +110,6 @@
   "Actions": [
     {
       "PowerHint": "INTERACTION",
-      "Node": "CPULittleMin",
-      "Value": "1113600",
-      "Duration": 180
-    },
-    {
-      "PowerHint": "INTERACTION",
       "Node": "CPUBigMin",
       "Value": "1401600",
       "Duration": 180

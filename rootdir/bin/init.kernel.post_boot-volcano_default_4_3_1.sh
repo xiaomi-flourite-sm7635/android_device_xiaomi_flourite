@@ -128,14 +128,10 @@ if [ -d /proc/sys/walt ]; then
 	# Turn off scheduler boost at the end
 	echo 0 > /proc/sys/walt/sched_boost
 
-	# configure input boost settings
-	echo 1228800 0 0 0 0 0 0 0 > /proc/sys/walt/input_boost/input_boost_freq
-	echo 120 > /proc/sys/walt/input_boost/input_boost_ms
-
-	# MIUI ADD: Performance_BoostFramework
-        echo 1804800 0 0 0 2400000 0 0 0 > /proc/sys/walt/input_boost/powerkey_input_boost_freq
-        echo 400 > /proc/sys/walt/input_boost/powerkey_input_boost_ms
-        # END Performance_BoostFramework
+	# WALT covers initial input latency; PowerHAL boosts big cores and GPU.
+	echo 1113600 0 0 0 0 0 0 0 > /proc/sys/walt/input_boost/input_boost_freq
+	echo 40 > /proc/sys/walt/input_boost/input_boost_ms
+	echo 0 > /proc/sys/walt/input_boost/sched_boost_on_input
 
 	echo "walt" > /sys/devices/system/cpu/cpufreq/policy0/scaling_governor
 	echo "walt" > /sys/devices/system/cpu/cpufreq/policy4/scaling_governor
