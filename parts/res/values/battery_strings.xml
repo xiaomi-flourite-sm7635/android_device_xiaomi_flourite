@@ -4,7 +4,9 @@
     <string name="charge_pause_title">Bypass charging (experimental)</string>
     <string name="charge_pause_summary">Requests a zero battery charging-current limit without suspending USB input. This does not confirm hardware battery isolation. Thermal protections remain enabled.</string>
     <string name="charge_pause_off">Off — no charging pause requested</string>
-    <string name="charge_pause_active">Zero charging-current limit confirmed by firmware</string>
+    <string name="charge_pause_active">Charging paused — zero charging-current limit confirmed by firmware</string>
+    <string name="battery_charging_paused">Charging paused</string>
+    <string name="charge_pause_restore_failed">Normal charging could not be confirmed. The pause is not marked as off. Retry restoring; this does not require the conditions used to enable the pause.</string>
     <string name="charge_pause_pending">Restoration pending — normal charging is not confirmed. Keep the charger connected and retry restoring.</string>
     <string name="charge_pause_unavailable">Control unavailable. Requires the matching kernel and ROM permissions; an unreadable state does not mean off.</string>
     <string name="charge_pause_busy">Checking the charging controller…</string>

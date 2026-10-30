@@ -43,11 +43,18 @@ internal fun ChargePauseCard(resumed: Boolean) {
     var busy by remember { mutableStateOf(false) }
     var confirm by remember { mutableStateOf(false) }
     var failed by remember { mutableStateOf(false) }
+    var failureDetail by remember { mutableStateOf<String?>(null) }
+    var requestedState by remember { mutableStateOf<ChargePauseState?>(null) }
 
     LaunchedEffect(resumed, busy) {
         if (!resumed || busy) return@LaunchedEffect
         while (isActive) {
             state = withContext(Dispatchers.IO) { control.state() }
+            if (state == requestedState) {
+                failed = false
+                failureDetail = null
+                requestedState = null
+            }
             delay(2_000)
         }
     }
@@ -56,13 +63,16 @@ internal fun ChargePauseCard(resumed: Boolean) {
         if (busy) return
         busy = true
         failed = false
+        failureDetail = null
+        requestedState = if (enabled) ChargePauseState.ACTIVE else ChargePauseState.OFF
         scope.launch {
             // Finish the write/readback even when the screen closes during the operation.
             val result = withContext(Dispatchers.IO + NonCancellable) {
-                control.setEnabled(enabled) to control.state()
+                control.setEnabled(enabled)
             }
-            failed = !result.first
-            state = result.second
+            failed = !result.confirmed
+            failureDetail = result.error
+            state = result.state
             busy = false
         }
     }
@@ -77,8 +87,9 @@ internal fun ChargePauseCard(resumed: Boolean) {
                 Text(stringResource(R.string.charge_pause_title), Modifier.weight(1f),
                     style = MaterialTheme.typography.titleMedium)
                 Switch(
-                    checked = state == ChargePauseState.ACTIVE,
-                    enabled = !busy && state in listOf(ChargePauseState.OFF, ChargePauseState.ACTIVE),
+                    // A pending restore is not "off": let the user request it again.
+                    checked = state == ChargePauseState.ACTIVE || state == ChargePauseState.RESTORE_PENDING,
+                    enabled = !busy && state != ChargePauseState.UNAVAILABLE,
                     onCheckedChange = { if (it) confirm = true else apply(false) },
                 )
             }
@@ -93,8 +104,14 @@ internal fun ChargePauseCard(resumed: Boolean) {
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant)
             if (failed) {
-                Text(stringResource(R.string.charge_pause_failed), color = MaterialTheme.colorScheme.error,
+                Text(stringResource(if (requestedState == ChargePauseState.OFF) {
+                    R.string.charge_pause_restore_failed
+                } else R.string.charge_pause_failed), color = MaterialTheme.colorScheme.error,
                     style = MaterialTheme.typography.bodyMedium)
+                failureDetail?.let {
+                    Text(it, color = MaterialTheme.colorScheme.error,
+                        style = MaterialTheme.typography.bodySmall)
+                }
             }
             // Keep an explicit recovery action available even if state cannot be read.
             if (state != ChargePauseState.OFF) {

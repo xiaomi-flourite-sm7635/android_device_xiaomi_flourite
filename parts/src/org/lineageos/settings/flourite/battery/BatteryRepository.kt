@@ -18,6 +18,7 @@ internal data class BatterySnapshot(
     val chargeUah: Int? = null,
     val status: Int? = null,
     val health: Int? = null,
+    val chargePauseState: ChargePauseState = ChargePauseState.UNAVAILABLE,
 )
 
 internal fun readBatterySnapshot(context: Context): BatterySnapshot {
@@ -47,5 +48,6 @@ internal fun readBatterySnapshot(context: Context): BatterySnapshot {
         chargeUah = property(BatteryManager.BATTERY_PROPERTY_CHARGE_COUNTER)?.takeIf { it >= 0 },
         status = extra(BatteryManager.EXTRA_STATUS),
         health = extra(BatteryManager.EXTRA_HEALTH),
+        chargePauseState = ChargePauseSession.control.state(),
     )
 }

@@ -4,7 +4,9 @@
     <string name="charge_pause_title">Bypass ricarica (sperimentale)</string>
     <string name="charge_pause_summary">Richiede un limite di corrente di carica pari a zero senza sospendere l’ingresso USB. Non conferma l’isolamento hardware della batteria. Le protezioni termiche restano attive.</string>
     <string name="charge_pause_off">Disattivato — nessuna pausa della ricarica richiesta</string>
-    <string name="charge_pause_active">Limite di corrente di carica zero confermato dal firmware</string>
+    <string name="charge_pause_active">Ricarica sospesa — limite di corrente di carica zero confermato dal firmware</string>
+    <string name="battery_charging_paused">Ricarica sospesa</string>
+    <string name="charge_pause_restore_failed">Ripresa della ricarica non confermata. La pausa non viene indicata come disattivata. Riprova il ripristino; non sono richieste le condizioni usate per attivare la pausa.</string>
     <string name="charge_pause_pending">Ripristino in attesa — ricarica normale non confermata. Lascia collegato il caricatore e riprova il ripristino.</string>
     <string name="charge_pause_unavailable">Controllo non disponibile. Servono kernel e permessi della ROM aggiornati; uno stato illeggibile non significa disattivato.</string>
     <string name="charge_pause_busy">Verifica del controller di ricarica…</string>

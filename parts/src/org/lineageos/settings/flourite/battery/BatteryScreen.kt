@@ -103,7 +103,9 @@ fun BatteryScreen(onBack: () -> Unit) {
     val charge = snapshot.chargeUah?.let {
         stringResource(R.string.battery_milliamp_hours, it / 1000.0)
     } ?: unavailable
-    val status = stringResource(statusLabel(snapshot.status))
+    val paused = snapshot.chargePauseState == ChargePauseState.ACTIVE
+    val charging = !paused && snapshot.status == BatteryManager.BATTERY_STATUS_CHARGING
+    val status = stringResource(if (paused) R.string.battery_charging_paused else statusLabel(snapshot.status))
     val health = stringResource(healthLabel(snapshot.health))
     val healthKnown = snapshot.health in setOf(
         BatteryManager.BATTERY_HEALTH_GOOD, BatteryManager.BATTERY_HEALTH_OVERHEAT,
@@ -122,7 +124,7 @@ fun BatteryScreen(onBack: () -> Unit) {
         ) {
             item("battery_hero") {
                 BatteryHero(snapshot.level, status, temperature,
-                    snapshot.status == BatteryManager.BATTERY_STATUS_CHARGING)
+                    charging)
             }
             item("live_section") { PartsCategoryTitle(stringResource(R.string.battery_live_section)) }
             item("charge_pause") { ChargePauseCard(resumed) }
@@ -143,7 +145,7 @@ fun BatteryScreen(onBack: () -> Unit) {
             item("status_health") {
                 MetricRow(
                     Metric(stringResource(R.string.battery_status), status,
-                        if (snapshot.status == BatteryManager.BATTERY_STATUS_CHARGING) {
+                        if (charging) {
                             Icons.Filled.BatteryChargingFull
                         } else Icons.Filled.BatteryFull),
                     Metric(stringResource(R.string.battery_health), health, when {
