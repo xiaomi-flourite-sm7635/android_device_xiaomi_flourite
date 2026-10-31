@@ -2,6 +2,7 @@
 type vendor_flourite_parts_control, fs_type, sysfs_type;
 type vendor_flourite_parts_status, fs_type, sysfs_type;
 type vendor_flourite_parts_cpu_online, fs_type, sysfs_type;
+type vendor_flourite_parts_governor, fs_type, sysfs_type;
 type vendor_flourite_charge_pause, fs_type, sysfs_type;
 
 # Only the bounded kernel session, never generic battery or input-suspend writes.
@@ -15,6 +16,22 @@ allow flourite_parts_app vendor_flourite_parts_status:file r_file_perms;
 allow vendor_init { vendor_flourite_parts_control vendor_flourite_parts_status }:file setattr;
 allow vendor_init vendor_flourite_parts_cpu_online:file setattr;
 allow flourite_parts_app vendor_flourite_parts_cpu_online:file rw_file_perms;
+
+# Only the three governor nodes are writable, not generic CPU sysfs files.
+allow flourite_parts_app vendor_flourite_parts_governor:file rw_file_perms;
+allow vendor_init vendor_flourite_parts_governor:file setattr;
+allow { domain -isolated_app_all } vendor_flourite_parts_governor:file r_file_perms;
+allow {
+    hal_power_default
+    vendor_hal_perf
+    vendor_mmi
+    mi_thermald
+    vendor_thermal-engine
+    vendor_hal_trustedui_qti
+    vendor_trusteduilistener
+} vendor_flourite_parts_governor:file rw_file_perms;
+allow { vendor_qti_init_shell vendor_msm_irqbalanced } vendor_flourite_parts_governor:file w_file_perms;
+allow vendor_qti_init_shell vendor_flourite_parts_governor:file { setattr relabelto };
 
 # Preserve existing readers and hotplug clients after labelling CPU online nodes.
 allow { domain -isolated_app_all } vendor_flourite_parts_cpu_online:file r_file_perms;

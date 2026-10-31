@@ -42,6 +42,7 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import org.lineageos.settings.flourite.R
+import org.lineageos.settings.flourite.ui.PartsChoicePreference
 import org.lineageos.settings.flourite.thermal.ThermalControls
 import org.lineageos.settings.flourite.ui.PartsInfoCard
 import org.lineageos.settings.flourite.ui.PartsMetricCard
@@ -151,6 +152,12 @@ fun CpuScreen(onBack: () -> Unit) {
                                 summary = stringResource(if (state == null) R.string.cpu_loading else R.string.cpu_policy_unavailable),
                             )
                         } else {
+                            PartsChoicePreference(
+                                title = stringResource(R.string.cpu_governor_title),
+                                summary = policy.governor ?: stringResource(R.string.cpu_unavailable),
+                                choices = policy.governors.map { it to it },
+                                enabled = !busy && policy.governorWritable,
+                            ) { governor -> governor?.let { runOperation { it.setGovernor(id, governor) } } }
                             PartsPreference(
                                 title = stringResource(R.string.cpu_range_title),
                                 summary = stringResource(R.string.cpu_range_value,

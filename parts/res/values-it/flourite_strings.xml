@@ -19,7 +19,8 @@
     <string name="flourite_cpu_limits_info">Gli intervalli manuali restano attivi fino al rilascio o al riavvio. I limiti termici hanno la precedenza, a meno di abilitare esplicitamente il bypass qui sotto. Sono disponibili solo le frequenze già presenti nel kernel.</string>
     <string name="flourite_cpu_limits_active">Intervallo manuale attivo. I limiti termici possono restringerlo. Disattiva per restituire il controllo al sistema.</string>
     <string name="flourite_cpu_kernel_required">Serve il kernel con il supporto Xiaomi Parts corrispondente. Le modifiche alle frequenze sono disabilitate finché manca l’interfaccia dedicata.</string>
-    <string name="flourite_cpu_restore_summary">Rilascia gli intervalli CPU manuali e ripristina i core modificati da questo processo dell’app. Tornano attive le richieste attuali del sistema. Il controllo termico è separato.</string>
+    <string name="cpu_governor_title">Governor delle frequenze CPU</string>
+    <string name="flourite_cpu_restore_summary">Rilascia gli intervalli CPU manuali, ripristina WALT dove disponibile e i core modificati da questo processo dell’app. Tornano attive le richieste attuali del sistema. Il controllo termico è separato.</string>
     <string name="flourite_thermal_title">Bypass dei limiti termici di frequenza CPU/GPU</string>
     <string name="flourite_thermal_enabled">I limiti termici software hanno la precedenza sugli intervalli manuali. Il bypass è disattivato inizialmente e si annulla al riavvio.</string>
     <string name="flourite_thermal_disabled">Gli intervalli manuali CPU/GPU possono superare i limiti software di frequenza. Le protezioni hardware, firmware e le altre protezioni termiche non cambiano. Calore e consumi possono aumentare.</string>

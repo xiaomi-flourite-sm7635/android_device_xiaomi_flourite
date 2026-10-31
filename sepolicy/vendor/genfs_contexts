@@ -86,3 +86,6 @@ genfscon sysfs /class/qcom-battery/parts_charge_pause u:object_r:vendor_flourite
 # Walt
 genfscon proc /sys/walt u:object_r:proc_walt:s0
 genfscon sysfs /nfc u:object_r:vendor_sysfs_nfc_chip:s0
+genfscon sysfs /devices/system/cpu/cpufreq/policy0/scaling_governor u:object_r:vendor_flourite_parts_governor:s0
+genfscon sysfs /devices/system/cpu/cpufreq/policy4/scaling_governor u:object_r:vendor_flourite_parts_governor:s0
+genfscon sysfs /devices/system/cpu/cpufreq/policy7/scaling_governor u:object_r:vendor_flourite_parts_governor:s0

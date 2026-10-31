@@ -7,6 +7,8 @@ package org.lineageos.settings.flourite.ui
 
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -29,6 +31,8 @@ import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.automirrored.filled.ArrowForwardIos
 import androidx.compose.material.icons.outlined.Info
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.TextButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.LargeTopAppBar
@@ -42,6 +46,9 @@ import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.ReadOnlyComposable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.setValue
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
@@ -66,6 +73,21 @@ val PartsGroupShape: Shape
     @Composable @ReadOnlyComposable get() = RoundedCornerShape(20.dp)
 
 private val PartsItemShape = RoundedCornerShape(4.dp)
+
+@Composable
+internal fun PartsChoicePreference(title: String, summary: String, choices: List<Pair<String?, String>>,
+    enabled: Boolean, onSelect: (String?) -> Unit) {
+    var choosing by remember { mutableStateOf(false) }
+    PartsPreference(title = title, summary = summary, enabled = enabled && choices.isNotEmpty(), onClick = { choosing = true })
+    if (choosing) AlertDialog(onDismissRequest = { choosing = false }, title = { Text(title) },
+        text = { LazyColumn(Modifier.heightIn(max = 400.dp)) {
+            items(choices) { (value, label) -> TextButton(onClick = {
+                if (enabled) { choosing = false; onSelect(value) }
+            }) { Text(label) } }
+        } }, confirmButton = {}, dismissButton = { TextButton(onClick = { choosing = false }) {
+            Text(stringResource(android.R.string.cancel))
+        } })
+}
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable

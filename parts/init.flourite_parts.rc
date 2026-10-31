@@ -1,5 +1,11 @@
 # SPDX-License-Identifier: Apache-2.0
 on property:sys.boot_completed=1
+    chown root system /sys/devices/system/cpu/cpufreq/policy0/scaling_governor
+    chown root system /sys/devices/system/cpu/cpufreq/policy4/scaling_governor
+    chown root system /sys/devices/system/cpu/cpufreq/policy7/scaling_governor
+    chmod 0660 /sys/devices/system/cpu/cpufreq/policy0/scaling_governor
+    chmod 0660 /sys/devices/system/cpu/cpufreq/policy4/scaling_governor
+    chmod 0660 /sys/devices/system/cpu/cpufreq/policy7/scaling_governor
     restorecon /sys/class/qcom-battery/parts_charge_pause
     chown root system /sys/class/qcom-battery/parts_charge_pause
     chmod 0660 /sys/class/qcom-battery/parts_charge_pause

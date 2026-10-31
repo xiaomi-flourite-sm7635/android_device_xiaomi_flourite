@@ -10,8 +10,9 @@ internal data class CpuPolicyState(
     val id: Int, val cpus: List<Int>, val frequencies: List<Long>,
     val minimum: Long, val maximum: Long, val current: Long?,
     val writable: Boolean, val lockSupported: Boolean, val locked: Boolean,
+    val governor: String?, val governors: List<String>, val governorWritable: Boolean,
 )
-internal data class CpuCoreState(val id: Int, val online: Boolean?, val canToggle: Boolean)
+internal data class CpuCoreState(val id: Int, val online: Boolean?, val canToggle: Boolean, val writable: Boolean)
 internal data class CpuState(val policies: List<CpuPolicyState>, val cores: List<CpuCoreState>, val unavailablePolicies: List<Int>)
 internal enum class CpuFailure { UNAVAILABLE, INVALID_FREQUENCY, INVALID_RANGE, LAST_CORE, WRITE_FAILED, READBACK_FAILED, LOCK_UNSUPPORTED }
 internal data class CpuResult(val failure: CpuFailure? = null, val rollbackFailed: Boolean = false) {
@@ -26,6 +27,7 @@ internal class CpuControlManager(
     private data class Limits(val enabled: Boolean, val min: Long, val max: Long)
     private val initialCores = mutableMapOf<Int, Boolean>()
     private val changedCores = mutableSetOf<Int>()
+    private val initialGovernors = mutableMapOf<Int, String>()
     private fun policy(id: Int) = File(cpuRoot, "cpufreq/policy$id")
     private fun control(id: Int) = File(policy(id), "scaling_parts_limits")
     private fun onlineFile(id: Int) = File(cpuRoot, "cpu$id/online")
@@ -52,8 +54,14 @@ internal class CpuControlManager(
         val maximum = raw?.takeIf { it.enabled }?.max ?: read(File(dir, "scaling_max_freq"))?.toLongOrNull() ?: return null
         if (minimum <= 0 || minimum > maximum) return null
         val writable = raw != null && control(id).canWrite() && frequencies.isNotEmpty()
+        val governorFile = File(dir, "scaling_governor")
+        val governors = read(File(dir, "scaling_available_governors"))
+            ?.split(Regex("\\s+"))?.filter { it.matches(Regex("[a-zA-Z0-9_-]{1,32}")) }?.distinct().orEmpty()
+        val governor = read(governorFile)?.takeIf { it in governors }
+        governor?.let { initialGovernors.putIfAbsent(id, it) }
         return CpuPolicyState(id, cpus(id), frequencies, minimum, maximum,
-            read(File(dir, "scaling_cur_freq"))?.toLongOrNull(), writable, raw != null && control(id).canWrite(), raw?.enabled == true)
+            read(File(dir, "scaling_cur_freq"))?.toLongOrNull(), writable, raw != null && control(id).canWrite(), raw?.enabled == true,
+            governor, governors, governor != null && governorFile.canWrite())
     }
     @Synchronized fun readState(): CpuState {
         val policies = policyIds.mapNotNull(::readPolicy)
@@ -61,8 +69,8 @@ internal class CpuControlManager(
             val active = online(id)
             active?.let { initialCores.putIfAbsent(id, it) }
             val group = policies.firstOrNull { id in it.cpus }?.cpus.orEmpty()
-            CpuCoreState(id, active, id != 0 && active != null && group.isNotEmpty() &&
-                onlineFile(id).canWrite() && (active == false || group.count { online(it) == true } > 1))
+            val writable = id in 1..6 && active != null && group.isNotEmpty() && onlineFile(id).canWrite()
+            CpuCoreState(id, active, writable && (active == false || group.count { online(it) == true } > 1), writable)
         }
         return CpuState(policies, cores, policyIds.filter { id -> policies.none { it.id == id } })
     }
@@ -73,6 +81,22 @@ internal class CpuControlManager(
         if (minimum > maximum) return CpuResult(CpuFailure.INVALID_RANGE)
         if (minimum !in state.frequencies || maximum !in state.frequencies) return CpuResult(CpuFailure.INVALID_FREQUENCY)
         return writeLimits(id, Limits(true, minimum, maximum))
+    }
+    @Synchronized fun setGovernor(id: Int, governor: String): CpuResult {
+        if (id !in policyIds) return CpuResult(CpuFailure.UNAVAILABLE)
+        val policy = readPolicy(id) ?: return CpuResult(CpuFailure.UNAVAILABLE)
+        if (!policy.governorWritable || governor !in policy.governors) return CpuResult(CpuFailure.UNAVAILABLE)
+        val before = policy.governor ?: return CpuResult(CpuFailure.UNAVAILABLE)
+        if (before == governor) return CpuResult()
+        val node = File(this.policy(id), "scaling_governor")
+        var failure = CpuFailure.WRITE_FAILED
+        try {
+            writer(node, "$governor\n")
+            failure = CpuFailure.READBACK_FAILED
+            if (read(node) == governor) return CpuResult()
+        } catch (_: Exception) { }
+        val restored = runCatching { writer(node, "$before\n"); read(node) == before }.getOrDefault(false)
+        return CpuResult(failure, !restored)
     }
     @Synchronized fun setFrequencyLock(id: Int, enabled: Boolean): CpuResult {
         if (id !in policyIds) return CpuResult(CpuFailure.UNAVAILABLE)
@@ -117,6 +141,11 @@ internal class CpuControlManager(
     @Synchronized fun restoreInitialValues(): CpuResult {
         var failed = false
         for (id in policyIds) if (!setFrequencyLock(id, false).successful) failed = true
+        // Flourite's post-boot policy uses WALT. Restore it even after an app process restart.
+        for (policy in readState().policies.filter { it.governorWritable }) {
+            val governor = "walt".takeIf { it in policy.governors } ?: initialGovernors[policy.id]
+            if (governor != null && !setGovernor(policy.id, governor).successful) failed = true
+        }
         // Restore only cores changed by this process, with online operations first.
         for (id in changedCores.sortedBy { initialCores[it] != true }) {
             if (!setCoreOnline(id, initialCores.getValue(id)).successful) failed = true

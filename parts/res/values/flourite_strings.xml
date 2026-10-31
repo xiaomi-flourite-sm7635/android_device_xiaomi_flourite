@@ -13,7 +13,8 @@
     <string name="flourite_cpu_limits_info">Manual ranges remain active until released or the phone restarts. Cooling limits still take priority unless you explicitly enable thermal bypass below. Only existing kernel frequencies are available.</string>
     <string name="flourite_cpu_limits_active">Manual range active. Thermal limits may narrow it. Turn off to return control to the system.</string>
     <string name="flourite_cpu_kernel_required">The matching Xiaomi Parts kernel is required. Frequency writes are disabled until its dedicated interface is available.</string>
-    <string name="flourite_cpu_restore_summary">Release manual CPU ranges and restore cores changed by this app process. Current system requests take effect again. The thermal switch is separate.</string>
+    <string name="cpu_governor_title">CPU frequency governor</string>
+    <string name="flourite_cpu_restore_summary">Release manual CPU ranges, restore WALT where available and restore cores changed by this app process. Current system requests take effect again. The thermal switch is separate.</string>
     <string name="flourite_thermal_title">Bypass CPU/GPU thermal frequency limits</string>
     <string name="flourite_thermal_accept">Accept risks and enable bypass</string>
     <string name="flourite_thermal_enabled">Software cooling limits take priority over manual ranges. Bypass is off by default and resets at reboot.</string>
