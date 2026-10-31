@@ -17,6 +17,11 @@ import org.lineageos.settings.flourite.cpu.CpuScreen
 import org.lineageos.settings.flourite.gpu.GpuScreen
 import org.lineageos.settings.flourite.memory.MemoryScreen
 import org.lineageos.settings.flourite.network.NetworkScreen
+import org.lineageos.settings.flourite.profiles.ProfileEditorScreen
+import org.lineageos.settings.flourite.profiles.ProfileMonitorService
+import org.lineageos.settings.flourite.profiles.ProfileRuntime
+import org.lineageos.settings.flourite.profiles.ProfileStore
+import org.lineageos.settings.flourite.profiles.ProfilesScreen
 import org.lineageos.settings.flourite.temperature.TemperatureScreen
 import org.lineageos.settings.flourite.ui.FlouritePartsTheme
 
@@ -24,6 +29,8 @@ class PartsApplication : Application() {
     override fun onCreate() {
         super.onCreate()
         DynamicColors.applyToActivitiesIfAvailable(this)
+        ProfileRuntime.attach(this)
+        ProfileMonitorService.resume(this)
     }
 }
 
@@ -57,6 +64,13 @@ class PartsSubActivity : ComponentActivity() {
         if (!requireOwner()) return
         val route = intent.getStringExtra(PAGE)
         if (route !in PAGES) { finish(); return }
+        val profilePackage = intent.getStringExtra(PROFILE_PACKAGE).orEmpty()
+        if (route == "profile" && (!ProfileStore.validPackage(profilePackage) || profilePackage == packageName)) {
+            finish(); return
+        }
+        val appName = runCatching {
+            packageManager.getApplicationLabel(packageManager.getApplicationInfo(profilePackage, 0)).toString()
+        }.getOrDefault(profilePackage)
         enableEdgeToEdge()
         setContent {
             FlouritePartsTheme {
@@ -67,6 +81,11 @@ class PartsSubActivity : ComponentActivity() {
                     "battery" -> BatteryScreen(::finish)
                     "temperature" -> TemperatureScreen(::finish)
                     "network" -> NetworkScreen(::finish)
+                    "profiles" -> ProfilesScreen(::finish) { name, _ ->
+                        startActivity(Intent(this, PartsSubActivity::class.java)
+                            .putExtra(PAGE, "profile").putExtra(PROFILE_PACKAGE, name))
+                    }
+                    "profile" -> ProfileEditorScreen(appName, profilePackage, ::finish)
                 }
             }
         }
@@ -80,4 +99,5 @@ private fun ComponentActivity.requireOwner(): Boolean {
     return false
 }
 private const val PAGE = "org.lineageos.settings.flourite.PAGE"
-private val PAGES = setOf("cpu", "gpu", "memory", "battery", "temperature", "network")
+private const val PROFILE_PACKAGE = "org.lineageos.settings.flourite.PROFILE_PACKAGE"
+private val PAGES = setOf("cpu", "gpu", "memory", "battery", "temperature", "network", "profiles", "profile")

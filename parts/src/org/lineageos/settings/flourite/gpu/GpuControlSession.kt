@@ -1,9 +1,15 @@
 /* SPDX-License-Identifier: Apache-2.0 */
 package org.lineageos.settings.flourite.gpu
 
+import org.lineageos.settings.flourite.profiles.PerformanceLock
+import org.lineageos.settings.flourite.profiles.ProfileRuntime
+
 internal data class GpuSessionSnapshot(val state: GpuState)
 internal object GpuControlSession {
-    private val manager = GpuControlManager()
-    @Synchronized fun snapshot() = GpuSessionSnapshot(manager.readState())
-    @Synchronized fun <T> manual(block: (GpuControlManager) -> T): T = block(manager)
+    internal val manager = GpuControlManager()
+    fun snapshot() = synchronized(PerformanceLock) { GpuSessionSnapshot(manager.readState()) }
+    fun manual(block: (GpuControlManager) -> GpuResult): GpuResult = synchronized(PerformanceLock) {
+        if (!ProfileRuntime.beforeManual()) GpuResult(GpuFailure.READBACK_FAILED)
+        else block(manager)
+    }
 }

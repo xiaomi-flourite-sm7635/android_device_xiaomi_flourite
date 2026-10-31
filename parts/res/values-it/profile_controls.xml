@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- SPDX-License-Identifier: Apache-2.0 -->
+<resources>
+    <string name="profiles_title">Profili per app</string>
+    <string name="profiles_summary">Impostazioni CPU, GPU e core per ogni app</string>
+    <string name="profiles_enable">Applica profili per app</string>
+    <string name="profiles_enable_summary">Applica i controlli salvati all’app in primo piano. Ripristina le impostazioni precedenti uscendo dall’app o bloccando lo schermo.</string>
+    <string name="profiles_status">Stato del profilo</string>
+    <string name="profiles_waiting">In attesa di un’app con un profilo salvato</string>
+    <string name="profiles_disabled">Profili automatici disattivati</string>
+    <string name="profiles_active">Profilo attivo: %1$s</string>
+    <string name="profiles_failed">Impossibile applicare o ripristinare un profilo. Cambio automatico interrotto: controlla le impostazioni prima di riattivarlo.</string>
+    <string name="profiles_notification_required">Consenti le notifiche per mantenere visibile il servizio dei profili.</string>
+    <string name="profiles_how_title">Configura ogni app qui</string>
+    <string name="profiles_how">Scegli un’app e salva le impostazioni CPU, GPU e core. La modifica del profilo non cambia i controlli attuali. Uscendo dall’app o bloccando lo schermo vengono ripristinate le impostazioni precedenti. Le modifiche manuali a CPU/GPU disattivano i profili automatici. I profili non modificano le protezioni termiche.</string>
+    <string name="profiles_add">Aggiungi profilo app</string>
+    <string name="profiles_empty">Scegli un’app per configurare il suo profilo prestazioni.</string>
+    <string name="profiles_saved_summary">Controlli salvati: %1$d. Tocca per modificare.</string>
+    <string name="profiles_remove">Rimuovi profilo</string>
+    <string name="profiles_choose">Scegli un’app</string>
+    <string name="profiles_search">Cerca app</string>
+    <string name="profiles_save">Salva profilo</string>
+    <string name="profiles_saved">Profilo salvato</string>
+    <string name="profiles_save_failed">Salvataggio non riuscito: verifica che i controlli scelti siano disponibili e che rimanga acceso almeno un core per cluster. La bozza rimane aperta.</string>
+    <string name="profiles_editor_help">I nuovi profili partono dai controlli attuali. Le modifiche restano nella bozza fino al salvataggio. Vengono applicate solo con questa app in primo piano e i profili automatici attivi. I valori salvati non più supportati vanno modificati prima di salvare.</string>
+    <string name="profiles_loading">Lettura dei controlli disponibili…</string>
+    <string name="profiles_load_failed">Impossibile leggere i controlli. Tocca per riprovare.</string>
+    <string name="profiles_automatic">Limiti automatici</string>
+    <string name="profiles_unchanged">Non modificare</string>
+    <string name="profiles_discard_title">Scartare le modifiche non salvate?</string>
+    <string name="profiles_discard">Scarta</string>
+    <string name="profiles_cluster">Cluster CPU · core %1$s</string>
+</resources>

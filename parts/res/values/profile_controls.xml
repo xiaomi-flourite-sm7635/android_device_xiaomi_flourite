@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- SPDX-License-Identifier: Apache-2.0 -->
+<resources>
+    <string name="profiles_title">App profiles</string>
+    <string name="profiles_summary">CPU, GPU and core settings for each app</string>
+    <string name="profiles_enable">Apply app profiles</string>
+    <string name="profiles_enable_summary">Apply saved controls to the foreground app. Restore previous settings when leaving the app or locking the screen.</string>
+    <string name="profiles_status">Profile status</string>
+    <string name="profiles_waiting">Waiting for an app with a saved profile</string>
+    <string name="profiles_disabled">Automatic profiles are off</string>
+    <string name="profiles_active">Profile active: %1$s</string>
+    <string name="profiles_failed">Unable to apply or restore a profile. Automatic switching is stopped; check the controls before enabling it again.</string>
+    <string name="profiles_notification_required">Allow notifications to keep the automatic profile service visible.</string>
+    <string name="profiles_how_title">Configure each app here</string>
+    <string name="profiles_how">Choose an app and save its CPU, GPU and core settings. Editing does not change current controls. Leaving the app or locking the screen restores previous settings. Manual CPU/GPU changes turn automatic profiles off. Thermal protections are not changed by profiles.</string>
+    <string name="profiles_add">Add app profile</string>
+    <string name="profiles_empty">Choose an app to configure its performance profile.</string>
+    <string name="profiles_saved_summary">Saved controls: %1$d. Tap to edit.</string>
+    <string name="profiles_remove">Remove profile</string>
+    <string name="profiles_choose">Choose an app</string>
+    <string name="profiles_search">Search apps</string>
+    <string name="profiles_save">Save profile</string>
+    <string name="profiles_saved">Profile saved</string>
+    <string name="profiles_save_failed">Cannot save: check that the selected controls are available and at least one core per cluster stays online. Your draft is still open.</string>
+    <string name="profiles_editor_help">New profiles start from current controls. Edits stay in this draft until saved. They apply only while this app is in the foreground and automatic profiles are enabled. Unsupported saved values must be changed before saving.</string>
+    <string name="profiles_loading">Reading available controls…</string>
+    <string name="profiles_load_failed">Unable to read controls. Tap to retry.</string>
+    <string name="profiles_automatic">Automatic limits</string>
+    <string name="profiles_unchanged">Leave unchanged</string>
+    <string name="profiles_discard_title">Discard unsaved profile changes?</string>
+    <string name="profiles_discard">Discard</string>
+    <string name="profiles_cluster">CPU cluster · cores %1$s</string>
+</resources>

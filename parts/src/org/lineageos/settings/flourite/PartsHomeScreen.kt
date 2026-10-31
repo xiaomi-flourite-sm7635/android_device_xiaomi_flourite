@@ -55,6 +55,12 @@ fun PartsHomeScreen(onNavigate: (String) -> Unit) {
             item("performance") {
                 PartsPreferenceGroup(title = stringResource(R.string.parts_performance)) {
                     PartsPreference(
+                        title = stringResource(R.string.profiles_title),
+                        summary = stringResource(R.string.profiles_summary),
+                        icon = Icons.Filled.Speed,
+                        onClick = { onNavigate("profiles") },
+                    )
+                    PartsPreference(
                         title = stringResource(R.string.parts_cpu_title),
                         summary = stringResource(R.string.parts_cpu_summary),
                         icon = Icons.Filled.Speed,
