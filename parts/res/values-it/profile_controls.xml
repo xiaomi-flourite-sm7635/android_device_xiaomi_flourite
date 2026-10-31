@@ -26,6 +26,7 @@
     <string name="profiles_loading">Lettura dei controlli disponibili…</string>
     <string name="profiles_load_failed">Impossibile leggere i controlli. Tocca per riprovare.</string>
     <string name="profiles_automatic">Limiti automatici</string>
+    <string name="profiles_range_unavailable">Le frequenze salvate non sono disponibili. Tocca per ripristinare questo intervallo.</string>
     <string name="profiles_unchanged">Non modificare</string>
     <string name="profiles_discard_title">Scartare le modifiche non salvate?</string>
     <string name="profiles_discard">Scarta</string>

@@ -22,6 +22,7 @@ import org.lineageos.settings.flourite.cpu.CpuState
 import org.lineageos.settings.flourite.gpu.GpuControlSession
 import org.lineageos.settings.flourite.gpu.GpuState
 import org.lineageos.settings.flourite.ui.*
+import kotlin.math.roundToInt
 
 private data class ProfileEditorData(val initial: AppPerformanceProfile, val cpu: CpuState, val gpu: GpuState)
 
@@ -135,17 +136,40 @@ private fun ProfileRangeControls(key: String, draft: AppPerformanceProfile, tabl
     val labels = listOf(stringResource(R.string.profiles_unchanged), stringResource(R.string.profiles_automatic),
         stringResource(R.string.cpu_range_title))
     val mode = when { value == null -> 0; value == "auto" -> 1; else -> 2 }
-    PartsChoicePreference(stringResource(R.string.cpu_range_title), labels[mode], modes.zip(labels), enabled) {
+    PartsChoicePreference(stringResource(R.string.cpu_range_title), labels[mode], modes.zip(labels), enabled && table.isNotEmpty()) {
         edit(key, if (it == "custom") "${table.first()} ${table.last()}" else it)
     }
     if (range != null) {
-        PartsChoicePreference(stringResource(R.string.gpu_minimum_frequency), "${range.first / 1000.0} MHz",
-            table.filter { it <= range.second }.map { it.toString() to "${it / 1000.0} MHz" }, enabled) {
-            edit(key, "$it ${range.second}")
-        }
-        PartsChoicePreference(stringResource(R.string.gpu_maximum_frequency), "${range.second / 1000.0} MHz",
-            table.filter { it >= range.first }.map { it.toString() to "${it / 1000.0} MHz" }, enabled) {
-            edit(key, "${range.first} $it")
+        if (range.first !in table || range.second !in table) {
+            // Do not silently round a profile saved with a different kernel's frequency table.
+            PartsPreference(title = stringResource(R.string.profiles_range_unavailable),
+                summary = "${range.first / 1000.0}–${range.second / 1000.0} MHz",
+                enabled = enabled && table.isNotEmpty(),
+                onClick = { edit(key, "${table.first()} ${table.last()}") })
+        } else {
+            var selection by remember(key, value, table) { mutableStateOf(
+                table.indexOf(range.first).toFloat()..table.indexOf(range.second).toFloat()) }
+            val lower = selection.start.roundToInt().coerceIn(table.indices)
+            val upper = selection.endInclusive.roundToInt().coerceIn(lower, table.lastIndex)
+            Column(Modifier.fillMaxWidth().padding(horizontal = 20.dp, vertical = 12.dp),
+                verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                Text(stringResource(R.string.gpu_minimum_frequency), style = MaterialTheme.typography.labelLarge)
+                Text("${table[lower] / 1000.0} MHz", style = MaterialTheme.typography.titleMedium)
+                Text(stringResource(R.string.gpu_maximum_frequency), style = MaterialTheme.typography.labelLarge)
+                Text("${table[upper] / 1000.0} MHz", style = MaterialTheme.typography.titleMedium)
+                if (table.size > 1) RangeSlider(
+                    value = selection,
+                    onValueChange = { selection = it },
+                    onValueChangeFinished = {
+                        val min = selection.start.roundToInt().coerceIn(table.indices)
+                        val max = selection.endInclusive.roundToInt().coerceIn(min, table.lastIndex)
+                        edit(key, "${table[min]} ${table[max]}")
+                    },
+                    valueRange = 0f..table.lastIndex.toFloat(),
+                    steps = (table.size - 2).coerceAtLeast(0),
+                    enabled = enabled,
+                )
+            }
         }
     }
 }

@@ -26,6 +26,7 @@
     <string name="profiles_loading">Reading available controls…</string>
     <string name="profiles_load_failed">Unable to read controls. Tap to retry.</string>
     <string name="profiles_automatic">Automatic limits</string>
+    <string name="profiles_range_unavailable">Saved frequencies are unavailable. Tap to reset this range.</string>
     <string name="profiles_unchanged">Leave unchanged</string>
     <string name="profiles_discard_title">Discard unsaved profile changes?</string>
     <string name="profiles_discard">Discard</string>
