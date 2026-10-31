@@ -124,7 +124,8 @@ internal fun DeviceSpecifications(variant: DeviceVariant, capacity: DeviceCapaci
     val unavailable = stringResource(R.string.parts_spec_unavailable)
     val loading = stringResource(R.string.parts_spec_loading)
     val ram = if (capacity == null) loading else capacity.ramBytes?.let {
-        Formatter.formatFileSize(context, it, Formatter.FLAG_IEC_UNITS or Formatter.FLAG_SHORTER)
+        // Use Android's advertised capacity and the same SI formatter as Settings.
+        Formatter.formatShortFileSize(context, it)
     } ?: unavailable
     val storage = if (capacity == null) loading else capacity.storageBytes?.let {
         Formatter.formatShortFileSize(context, it)
