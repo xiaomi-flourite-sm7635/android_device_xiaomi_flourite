@@ -41,6 +41,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.NonCancellable
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
@@ -50,9 +51,11 @@ import org.lineageos.settings.flourite.ui.PartsInfoCard
 import org.lineageos.settings.flourite.ui.PartsPreference
 import org.lineageos.settings.flourite.ui.PartsPreferenceGroup
 import org.lineageos.settings.flourite.ui.PartsScaffold
+import org.lineageos.settings.flourite.ui.PartsSwitchPreference
 import org.lineageos.settings.flourite.ui.rememberPartsResumed
 
-private data class TcpConfirmation(val expected: TcpState, val target: String, val restore: Boolean)
+private data class TcpConfirmation(val expected: TcpState, val target: String, val restore: Boolean,
+    val persist: Boolean? = null)
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -66,6 +69,7 @@ fun NetworkScreen(onBack: () -> Unit) {
     var tcp by remember { mutableStateOf<TcpState?>(null) }
     var busy by remember { mutableStateOf(false) }
     var result by remember { mutableStateOf<TcpResult?>(null) }
+    var persistenceResult by remember { mutableStateOf(false) }
     var operationFailed by remember { mutableStateOf(false) }
     var confirmation by remember { mutableStateOf<TcpConfirmation?>(null) }
     var settingsUnavailable by remember { mutableStateOf(false) }
@@ -106,11 +110,13 @@ fun NetworkScreen(onBack: () -> Unit) {
         confirmation = null
         busy = true
         result = null
+        persistenceResult = change.persist != null
         operationFailed = false
         scope.launch {
             try {
-                val applied = withContext(Dispatchers.IO) {
-                    if (change.restore) TcpControlSession.manager.restoreInitial(change.expected)
+                val applied = withContext(Dispatchers.IO + NonCancellable) {
+                    if (change.persist != null) TcpControlSession.manager.setPersistence(change.persist, change.expected)
+                    else if (change.restore) TcpControlSession.manager.restoreInitial(change.expected)
                     else TcpControlSession.manager.apply(change.target, change.expected)
                 }
                 tcp = applied.state
@@ -187,6 +193,17 @@ fun NetworkScreen(onBack: () -> Unit) {
                             PartsPreferenceGroup {
                                 NetworkValue(R.string.network_tcp_current, tcp?.current?.let(::algorithmName))
                                 NetworkValue(R.string.network_tcp_initial, tcp?.initial?.let(::algorithmName))
+                                val state = tcp
+                                PartsSwitchPreference(title = stringResource(R.string.network_tcp_persist),
+                                    summary = when {
+                                        state?.canPersist != true -> stringResource(R.string.network_tcp_persist_unavailable)
+                                        state.savedAlgorithm != null -> stringResource(R.string.network_tcp_saved, algorithmName(state.savedAlgorithm))
+                                        else -> stringResource(R.string.network_tcp_not_saved)
+                                    }, checked = state?.savedAlgorithm != null,
+                                    enabled = resumed && !busy && state?.canPersist == true &&
+                                        (state.savedAlgorithm != null || state.canApply && state.current in state.available),
+                                    onCheckedChange = { enabled -> if (state != null)
+                                        apply(TcpConfirmation(state, state.current.orEmpty(), false, enabled)) })
                             }
                         }
                         if (busy) item("tcp_busy") {
@@ -194,9 +211,13 @@ fun NetworkScreen(onBack: () -> Unit) {
                         }
                         result?.let { applied ->
                             item("tcp_result") {
-                                PartsInfoCard(body = if (applied.successful) stringResource(
-                                    R.string.network_tcp_applied, algorithmName(applied.state.current.orEmpty()))
-                                    else stringResource(tcpFailureString(applied.failure)))
+                                PartsInfoCard(body = when {
+                                    !applied.successful -> stringResource(tcpFailureString(applied.failure))
+                                    persistenceResult -> applied.state.savedAlgorithm?.let {
+                                        stringResource(R.string.network_tcp_saved, algorithmName(it))
+                                    } ?: stringResource(R.string.network_tcp_not_saved)
+                                    else -> stringResource(R.string.network_tcp_applied, algorithmName(applied.state.current.orEmpty()))
+                                })
                             }
                         }
                         if (operationFailed) item("tcp_failed") {
@@ -352,5 +373,6 @@ private fun tcpFailureString(failure: TcpFailure?): Int = when (failure) {
     TcpFailure.WRITE_FAILED -> R.string.network_tcp_write_failed
     TcpFailure.READBACK_FAILED -> R.string.network_tcp_readback_failed
     TcpFailure.NOT_OWNED -> R.string.network_tcp_not_owned
+    TcpFailure.PERSISTENCE_FAILED -> R.string.network_tcp_save_failed
     else -> R.string.network_tcp_unavailable
 }

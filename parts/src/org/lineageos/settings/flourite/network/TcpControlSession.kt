@@ -15,6 +15,11 @@ internal object TcpControlSession {
         override fun request(algorithm: String) {
             SystemProperties.set("sys.flouriteparts.tcp_congestion", algorithm)
         }
+        override fun persistenceReady() = SystemProperties.get("sys.flouriteparts.tcp_persist_ready") == "1"
+        override fun readSaved() = SystemProperties.get("persist.sys.flouriteparts.tcp_congestion", "off")
+        override fun save(algorithm: String) {
+            SystemProperties.set("persist.sys.flouriteparts.tcp_congestion", algorithm)
+        }
     })
 
     private const val SYSCTL = "/proc/sys/net/ipv4"

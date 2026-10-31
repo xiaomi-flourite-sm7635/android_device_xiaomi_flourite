@@ -53,7 +53,12 @@
     <string name="network_ss_rsrp">SS-RSRP</string>
     <string name="network_ss_rsrq">SS-RSRQ</string>
     <string name="network_ss_sinr">SS-SINR</string>
-    <string name="network_tcp_help">Scegli il controllo della congestione predefinito per le nuove connessioni TCP. Le connessioni esistenti e UDP/QUIC non cambiano. Sono elencati solo gli algoritmi supportati e disponibili nel kernel in esecuzione. Le prestazioni dipendono dalla connessione: nessun algoritmo è sempre più veloce. Le modifiche non vengono mantenute dopo il riavvio.</string>
+    <string name="network_tcp_help">Scegli il controllo della congestione predefinito per le nuove connessioni TCP. Le connessioni esistenti e UDP/QUIC non cambiano. Sono elencati solo gli algoritmi supportati e disponibili nel kernel in esecuzione. Le prestazioni dipendono dalla connessione: nessun algoritmo è sempre più veloce. Attiva Mantieni al riavvio per memorizzare la scelta verificata.</string>
+    <string name="network_tcp_persist">Mantieni al riavvio</string>
+    <string name="network_tcp_saved">Salvato per l’avvio: %1$s. Le successive scelte verificate vengono salvate automaticamente.</string>
+    <string name="network_tcp_not_saved">Non salvato. Disattivare questa opzione non cambia l’algoritmo attivo; al prossimo riavvio viene usato quello predefinito della ROM.</string>
+    <string name="network_tcp_persist_unavailable">Il salvataggio richiede la configurazione aggiornata della ROM.</string>
+    <string name="network_tcp_save_failed">Impossibile confermare la scelta salvata per l’avvio. L’algoritmo attivo potrebbe essere cambiato: controlla i valori attivo e salvato qui sopra.</string>
     <string name="network_tcp_current">Algoritmo attuale</string>
     <string name="network_tcp_initial">Algoritmo iniziale di questa sessione</string>
     <string name="network_tcp_algorithms">Algoritmi disponibili</string>
@@ -62,7 +67,7 @@
     <string name="network_tcp_applied">Ultima richiesta verificata: %1$s.</string>
     <string name="network_tcp_restore">Ripristina algoritmo iniziale</string>
     <string name="network_tcp_apply_title">Cambiare algoritmo TCP?</string>
-    <string name="network_tcp_confirmation">Usare %1$s come predefinito per le nuove connessioni TCP? Le connessioni esistenti mantengono il loro algoritmo. La modifica rimane fino a una nuova impostazione o al riavvio del telefono.</string>
+    <string name="network_tcp_confirmation">Usare %1$s come predefinito per le nuove connessioni TCP? Le connessioni esistenti mantengono il loro algoritmo. Se Mantieni al riavvio è attivo, la scelta verificata viene salvata anche per l’avvio.</string>
     <string name="network_apply">Applica</string>
     <string name="network_tcp_unavailable">Il controllo TCP non è disponibile in questa build oppure non è stato possibile leggere i valori del kernel.</string>
     <string name="network_tcp_invalid">Questo algoritmo non è più disponibile. Scegli dalla lista aggiornata.</string>

@@ -1,2 +1,4 @@
-sys.flouriteparts.tcp_congestion u:object_r:flouriteparts_tcp_request_prop:s0 exact enum reno cubic bic westwood htcp bbr bbr3
+sys.flouriteparts.tcp_congestion u:object_r:flouriteparts_tcp_request_prop:s0 exact enum off reno cubic bic westwood htcp bbr bbr3
 sys.flouriteparts.tcp_ready u:object_r:flouriteparts_tcp_status_prop:s0 exact bool
+persist.sys.flouriteparts.tcp_congestion u:object_r:flouriteparts_tcp_request_prop:s0 exact enum off reno cubic bic westwood htcp bbr bbr3
+sys.flouriteparts.tcp_persist_ready u:object_r:flouriteparts_tcp_status_prop:s0 exact bool

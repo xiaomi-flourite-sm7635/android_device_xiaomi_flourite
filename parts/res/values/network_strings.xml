@@ -53,7 +53,12 @@
     <string name="network_ss_rsrp">SS-RSRP</string>
     <string name="network_ss_rsrq">SS-RSRQ</string>
     <string name="network_ss_sinr">SS-SINR</string>
-    <string name="network_tcp_help">Choose the default congestion control for new TCP connections. Existing connections and UDP/QUIC are unaffected. Only supported algorithms reported by the running kernel are listed. Performance depends on the connection; no algorithm is always faster. Changes are not saved across restarts.</string>
+    <string name="network_tcp_help">Choose the default congestion control for new TCP connections. Existing connections and UDP/QUIC are unaffected. Only supported algorithms reported by the running kernel are listed. Performance depends on the connection; no algorithm is always faster. Enable Keep after reboot to remember your verified selection.</string>
+    <string name="network_tcp_persist">Keep after reboot</string>
+    <string name="network_tcp_saved">Saved for startup: %1$s. Further verified selections are saved automatically.</string>
+    <string name="network_tcp_not_saved">Not saved. Turning this off leaves the current algorithm unchanged; the next reboot uses the ROM default.</string>
+    <string name="network_tcp_persist_unavailable">Saving requires the updated ROM configuration.</string>
+    <string name="network_tcp_save_failed">The saved startup selection could not be confirmed. The active algorithm may have changed; check the active and saved values above.</string>
     <string name="network_tcp_current">Current algorithm</string>
     <string name="network_tcp_initial">Initial algorithm in this session</string>
     <string name="network_tcp_algorithms">Available algorithms</string>
@@ -62,7 +67,7 @@
     <string name="network_tcp_applied">Last request verified: %1$s.</string>
     <string name="network_tcp_restore">Restore initial algorithm</string>
     <string name="network_tcp_apply_title">Change TCP algorithm?</string>
-    <string name="network_tcp_confirmation">Use %1$s as the default for new TCP connections? Existing connections keep their current algorithm. The change lasts until it is replaced or the phone restarts.</string>
+    <string name="network_tcp_confirmation">Use %1$s as the default for new TCP connections? Existing connections keep their current algorithm. If Keep after reboot is enabled, the verified choice is also saved for startup.</string>
     <string name="network_apply">Apply</string>
     <string name="network_tcp_unavailable">TCP control is unavailable on this build or the kernel values could not be read.</string>
     <string name="network_tcp_invalid">This algorithm is no longer available. Choose from the updated list.</string>

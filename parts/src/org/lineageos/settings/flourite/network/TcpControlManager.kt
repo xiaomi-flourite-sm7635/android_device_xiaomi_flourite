@@ -4,7 +4,7 @@
 package org.lineageos.settings.flourite.network
 
 internal enum class TcpFailure {
-    UNAVAILABLE, INVALID_ALGORITHM, CONFLICT, WRITE_FAILED, READBACK_FAILED, NOT_OWNED,
+    UNAVAILABLE, INVALID_ALGORITHM, CONFLICT, WRITE_FAILED, READBACK_FAILED, NOT_OWNED, PERSISTENCE_FAILED,
 }
 
 internal data class TcpState(
@@ -14,6 +14,8 @@ internal data class TcpState(
     val canApply: Boolean,
     val canRestore: Boolean,
     val unavailableReason: TcpFailure?,
+    val savedAlgorithm: String? = null,
+    val canPersist: Boolean = false,
 )
 
 internal data class TcpResult(
@@ -30,10 +32,14 @@ internal interface TcpControlPort {
     fun readAvailable(): String
     fun controlReady(): Boolean
     fun request(algorithm: String)
+    fun persistenceReady(): Boolean = false
+    fun readSaved(): String = "off"
+    fun save(algorithm: String) { throw UnsupportedOperationException() }
 }
 
 /**
- * Changes the default for new TCP sockets. No boot persistence, module loading, or qdisc writes.
+ * Changes the default for new TCP sockets; optionally remembers verified choices for init at boot.
+ * No qdisc writes or background enforcement.
  * Call on a worker thread: init applies requests asynchronously, so success requires readback.
  */
 internal class TcpControlManager(
@@ -50,7 +56,7 @@ internal class TcpControlManager(
         if (target !in SUPPORTED || target !in before.available) {
             return TcpResult(before, TcpFailure.INVALID_ALGORITHM)
         }
-        return applyChecked(target, expected, before)
+        return rememberIfEnabled(applyChecked(target, expected, before), before.savedAlgorithm != null)
     }
 
     @Synchronized fun restoreInitial(expected: TcpState): TcpResult {
@@ -59,7 +65,30 @@ internal class TcpControlManager(
             return TcpResult(before, TcpFailure.CONFLICT)
         }
         if (!before.canRestore) return TcpResult(before, TcpFailure.NOT_OWNED)
-        return applyChecked(checkNotNull(initial), expected, before)
+        return rememberIfEnabled(applyChecked(checkNotNull(initial), expected, before), before.savedAlgorithm != null)
+    }
+
+    @Synchronized fun setPersistence(enabled: Boolean, expected: TcpState): TcpResult {
+        val before = snapshot()
+        if (!before.canPersist) return TcpResult(before, TcpFailure.PERSISTENCE_FAILED)
+        if (enabled && (before.current != expected.current || before.available != expected.available))
+            return TcpResult(before, TcpFailure.CONFLICT)
+        if (enabled && (!before.canApply || before.current !in before.available))
+            return TcpResult(before, TcpFailure.INVALID_ALGORITHM)
+        return saveChecked(if (enabled) checkNotNull(before.current) else null, TcpResult(before))
+    }
+
+    private fun rememberIfEnabled(result: TcpResult, enabled: Boolean): TcpResult =
+        if (result.successful && enabled) saveChecked(result.state.current, result) else result
+
+    private fun saveChecked(target: String?, result: TcpResult): TcpResult {
+        if (!result.state.canPersist || target != null && target !in SUPPORTED)
+            return result.copy(failure = TcpFailure.PERSISTENCE_FAILED)
+        val saved = runCatching {
+            port.save(target ?: "off")
+            port.readSaved().trim() == (target ?: "off")
+        }.getOrDefault(false)
+        return result.copy(state = snapshot(), failure = if (saved) null else TcpFailure.PERSISTENCE_FAILED)
     }
 
     private fun applyChecked(target: String, expected: TcpState, before: TcpState): TcpResult {
@@ -128,11 +157,14 @@ internal class TcpControlManager(
                 values.isNotEmpty() && values.all { NAME.matches(it) }
             }?.toSet()?.let { values -> SUPPORTED.filter { it in values } }.orEmpty()
         val ready = runCatching { port.controlReady() }.getOrDefault(false)
+        val saved = runCatching { port.readSaved().trim() }.getOrNull()
+        val canPersist = runCatching { port.persistenceReady() }.getOrDefault(false) &&
+            (saved in SUPPORTED || saved == "off" || saved == "")
         if (initial == null && current != null) initial = current
         if (owned != null && current != owned) owned = null
         val applicable = current != null && available.isNotEmpty() && ready
         val state = TcpState(current, available, initial, applicable, false,
-            if (applicable) null else TcpFailure.UNAVAILABLE)
+            if (applicable) null else TcpFailure.UNAVAILABLE, saved?.takeIf { it in SUPPORTED }, canPersist)
         return state.copy(canRestore = canRestore(state))
     }
 

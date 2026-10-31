@@ -1,6 +1,10 @@
 # SPDX-License-Identifier: Apache-2.0
 on property:sys.boot_completed=1
+    # Read once per boot, after persistent properties and normal network setup.
+    # "off" has no write action, leaving the ROM default unchanged.
+    setprop sys.flouriteparts.tcp_congestion ${persist.sys.flouriteparts.tcp_congestion:-off}
     setprop sys.flouriteparts.tcp_ready 1
+    setprop sys.flouriteparts.tcp_persist_ready 1
 
 on property:sys.flouriteparts.tcp_congestion=reno
     write /proc/sys/net/ipv4/tcp_congestion_control reno
