@@ -3,17 +3,8 @@
  */
 package org.lineageos.settings.flourite.battery
 
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.padding
-import androidx.compose.material3.AlertDialog
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Surface
-import androidx.compose.material3.Switch
-import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.BatteryChargingFull
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -21,10 +12,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
-import androidx.compose.ui.Alignment
-import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.unit.dp
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.NonCancellable
 import kotlinx.coroutines.delay
@@ -32,8 +20,10 @@ import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import org.lineageos.settings.flourite.R
-import org.lineageos.settings.flourite.ui.PartsGroupShape
-import org.lineageos.settings.flourite.ui.PartsPageGutter
+import org.lineageos.settings.flourite.ui.PartsInfoCard
+import org.lineageos.settings.flourite.ui.PartsPreference
+import org.lineageos.settings.flourite.ui.PartsPreferenceGroup
+import org.lineageos.settings.flourite.ui.PartsSwitchPreference
 
 @Composable
 internal fun ChargePauseCard(resumed: Boolean) {
@@ -41,7 +31,6 @@ internal fun ChargePauseCard(resumed: Boolean) {
     val scope = rememberCoroutineScope()
     var state by remember { mutableStateOf(ChargePauseState.UNAVAILABLE) }
     var busy by remember { mutableStateOf(false) }
-    var confirm by remember { mutableStateOf(false) }
     var failed by remember { mutableStateOf(false) }
     var failureDetail by remember { mutableStateOf<String?>(null) }
     var requestedState by remember { mutableStateOf<ChargePauseState?>(null) }
@@ -77,63 +66,31 @@ internal fun ChargePauseCard(resumed: Boolean) {
         }
     }
 
-    Surface(
-        modifier = Modifier.fillMaxWidth().padding(horizontal = PartsPageGutter, vertical = 6.dp),
-        shape = PartsGroupShape,
-        color = MaterialTheme.colorScheme.surfaceContainer,
-    ) {
-        Column(Modifier.padding(20.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                Text(stringResource(R.string.charge_pause_title), Modifier.weight(1f),
-                    style = MaterialTheme.typography.titleMedium)
-                Switch(
-                    // A pending restore is not "off": let the user request it again.
-                    checked = state == ChargePauseState.ACTIVE || state == ChargePauseState.RESTORE_PENDING,
-                    enabled = !busy && state != ChargePauseState.UNAVAILABLE,
-                    onCheckedChange = { if (it) confirm = true else apply(false) },
-                )
-            }
-            Text(stringResource(when {
+    PartsPreferenceGroup {
+        PartsSwitchPreference(
+            title = stringResource(R.string.charge_pause_title),
+            summary = stringResource(when {
                 busy -> R.string.charge_pause_busy
                 state == ChargePauseState.ACTIVE -> R.string.charge_pause_active
                 state == ChargePauseState.RESTORE_PENDING -> R.string.charge_pause_pending
                 state == ChargePauseState.OFF -> R.string.charge_pause_off
                 else -> R.string.charge_pause_unavailable
-            }), style = MaterialTheme.typography.bodyMedium)
-            Text(stringResource(R.string.charge_pause_summary),
-                style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant)
-            if (failed) {
-                Text(stringResource(if (requestedState == ChargePauseState.OFF) {
-                    R.string.charge_pause_restore_failed
-                } else R.string.charge_pause_failed), color = MaterialTheme.colorScheme.error,
-                    style = MaterialTheme.typography.bodyMedium)
-                failureDetail?.let {
-                    Text(it, color = MaterialTheme.colorScheme.error,
-                        style = MaterialTheme.typography.bodySmall)
-                }
-            }
-            // Keep an explicit recovery action available even if state cannot be read.
-            if (state != ChargePauseState.OFF) {
-                TextButton(onClick = { apply(false) }, enabled = !busy) {
-                    Text(stringResource(R.string.charge_pause_restore))
-                }
-            }
+            }),
+            icon = Icons.Filled.BatteryChargingFull,
+            checked = state == ChargePauseState.ACTIVE || state == ChargePauseState.RESTORE_PENDING,
+            enabled = !busy && state != ChargePauseState.UNAVAILABLE,
+            onCheckedChange = ::apply,
+        )
+        // Preserve a recovery action when the state is unreadable or restoration is pending.
+        if (state == ChargePauseState.UNAVAILABLE || state == ChargePauseState.RESTORE_PENDING) {
+            PartsPreference(title = stringResource(R.string.charge_pause_restore),
+                enabled = !busy, onClick = { apply(false) })
         }
     }
-    if (confirm) {
-        AlertDialog(
-            onDismissRequest = { confirm = false },
-            title = { Text(stringResource(R.string.charge_pause_title)) },
-            text = { Text(stringResource(R.string.charge_pause_warning)) },
-            confirmButton = {
-                TextButton(onClick = { confirm = false; apply(true) }) {
-                    Text(stringResource(R.string.charge_pause_enable))
-                }
-            },
-            dismissButton = {
-                TextButton(onClick = { confirm = false }) { Text(stringResource(android.R.string.cancel)) }
-            },
-        )
+    if (failed) {
+        PartsInfoCard(body = stringResource(if (requestedState == ChargePauseState.OFF)
+            R.string.charge_pause_restore_failed else R.string.charge_pause_failed) +
+            failureDetail?.let { "\n$it" }.orEmpty())
     }
+    PartsInfoCard(body = stringResource(R.string.charge_pause_warning))
 }
