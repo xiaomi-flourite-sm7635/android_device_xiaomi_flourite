@@ -92,5 +92,4 @@ internal fun ChargePauseCard(resumed: Boolean) {
             R.string.charge_pause_restore_failed else R.string.charge_pause_failed) +
             failureDetail?.let { "\n$it" }.orEmpty())
     }
-    PartsInfoCard(body = stringResource(R.string.charge_pause_warning))
 }

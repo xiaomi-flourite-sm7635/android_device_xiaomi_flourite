@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!-- SPDX-License-Identifier: Apache-2.0 -->
 <resources>
-    <string name="charge_pause_title">Bypass ricarica (sperimentale)</string>
+    <string name="charge_pause_title">Bypass ricarica</string>
     <string name="charge_pause_summary">Richiede un limite di corrente di carica pari a zero senza sospendere l’ingresso USB. Non conferma l’isolamento hardware della batteria. Le protezioni termiche restano attive.</string>
     <string name="charge_pause_off">Disattivato — nessuna pausa della ricarica richiesta</string>
     <string name="charge_pause_active">Ricarica sospesa — limite di corrente di carica zero confermato dal firmware</string>
@@ -13,7 +13,6 @@
     <string name="charge_pause_failed">Operazione non confermata. Controlla lo stato sopra. Per attivare, collega un caricatore con batteria al 30–95%, temperatura a 20–40 °C e stato buono. Il firmware potrebbe non supportare la pausa.</string>
     <string name="charge_pause_restore">Ripristina ricarica normale</string>
     <string name="charge_pause_enable">Prova pausa ricarica</string>
-    <string name="charge_pause_warning">Sperimentale: verifica corrente e livello della batteria con un caricatore a muro. Se l’ingresso USB è insufficiente, la batteria può continuare a fornire energia.\n\nIl kernel controlla ogni 5 secondi quando attivo e tenta di ripristinare il limite precedente dopo 30 minuti, scollegamento, valori fuori soglia o riavvio del servizio di ricarica. Non impedisce la sospensione: i controlli riprendono al risveglio. Gli altri controlli di ricarica hanno precedenza.\n\nNon viene salvato tra i riavvii. Ripristina prima di riavviare o flashare; reset forzati ed errori del firmware possono impedire il ripristino. Interrompi il test se la ricarica non riprende.</string>
     <string name="battery_title">Batteria</string>
     <string name="battery_level">Livello batteria</string>
     <string name="battery_status">Stato di ricarica</string>
