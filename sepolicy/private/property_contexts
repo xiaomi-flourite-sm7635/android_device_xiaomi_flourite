@@ -1,0 +1,4 @@
+# Legacy audio-offload properties consumed by the stock Bluetooth audio library.
+# Keep their names and values; reuse the AOSP type already readable by audio HALs.
+persist.bluetooth.dfs.enable u:object_r:bluetooth_a2dp_offload_prop:s0 exact string
+persist.latency.add.avsync.bt u:object_r:bluetooth_a2dp_offload_prop:s0 exact string
