@@ -1,0 +1,77 @@
+--- a/media/codec2/hal/client/client.cpp
++++ b/media/codec2/hal/client/client.cpp
+@@ -2447,6 +2447,7 @@
+ c2_status_t Codec2Client::createInterface(
+         const C2String& name,
+         std::shared_ptr<Codec2Client::Interface>* const interface) {
++    interface->reset();
+     if (mApexBase) {
+         if (__builtin_available(android 36, *)) {
+             ApexCodec_Component *comp = nullptr;
+@@ -2479,19 +2480,41 @@
+         return C2_OK;
+     }
+ 
+-    c2_status_t status;
++    c2_status_t status = C2_CORRUPTED;
+     Return<void> transStatus = mHidlBase1_0->createInterface(
+             name,
+-            [&status, interface](
++            [&status, &name, interface](
+                     c2_hidl::Status s,
+                     const sp<c2_hidl::IComponentInterface>& i) {
+                 status = static_cast<c2_status_t>(s);
+                 if (status != C2_OK) {
+                     return;
+                 }
+-                *interface = std::make_shared<Interface>(i);
++                if (!i) {
++                    LOG(ERROR) << "createInterface(" << name.c_str()
++                               << ") -- null HIDL interface.";
++                    status = C2_CORRUPTED;
++                    return;
++                }
++                Return<sp<c2_hidl::IConfigurable>> configurableResult = i->getConfigurable();
++                if (!configurableResult.isOk()) {
++                    LOG(ERROR) << "createInterface(" << name.c_str()
++                               << ") -- getConfigurable transaction failed: "
++                               << configurableResult.description();
++                    status = C2_TRANSACTION_FAILED;
++                    return;
++                }
++                sp<c2_hidl::IConfigurable> configurable = configurableResult;
++                if (!configurable) {
++                    LOG(ERROR) << "createInterface(" << name.c_str()
++                               << ") -- null HIDL configurable.";
++                    status = C2_CORRUPTED;
++                    return;
++                }
++                *interface = std::make_shared<Interface>(i, configurable);
+             });
+     if (!transStatus.isOk()) {
++        interface->reset();
+         LOG(ERROR) << "createInterface(" << name.c_str()
+                    << ") -- transaction failed.";
+         return C2_TRANSACTION_FAILED;
+@@ -3106,6 +3129,11 @@
+ }
+ 
+ // Codec2Client::Interface
++Codec2Client::Interface::Interface(const sp<HidlBase>& base,
++                                 const sp<Configurable::HidlBase>& configurable)
++      : Configurable{configurable}, mHidlBase{base} {
++}
++
+ Codec2Client::Interface::Interface(const sp<HidlBase>& base)
+       : Configurable{
+             [base]() -> sp<c2_hidl::IConfigurable> {
+--- a/media/codec2/hal/client/include/codec2/hidl/client.h
++++ b/media/codec2/hal/client/include/codec2/hidl/client.h
+@@ -363,6 +363,7 @@
+     typedef ::aidl::android::hardware::media::c2::IComponentInterface AidlBase;
+ 
+     Interface(const sp<HidlBase>& base);
++    Interface(const sp<HidlBase>& base, const sp<Configurable::HidlBase>& configurable);
+     Interface(const std::shared_ptr<AidlBase>& base);
+     Interface(ApexCodec_Component* base, const C2String& name);
+     ~Interface();
