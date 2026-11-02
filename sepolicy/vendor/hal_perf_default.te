@@ -4,3 +4,17 @@ allow vendor_hal_perf_default sys_thermal_boost:file rw_file_perms;
 # Perfd inspects the camera provider's proc directory when applying hints.
 allow vendor_hal_perf_default hal_camera_default:dir search;
 allow vendor_hal_perf_default hal_camera_default:file r_file_perms;
+
+# Read proc metadata for the native clients seen in perflock requests.
+allow vendor_hal_perf_default {
+    hal_audio_default
+    hal_fingerprint_default
+    mediacodec
+    vendor_hal_poweroptservice_qti
+}:dir search;
+allow vendor_hal_perf_default {
+    hal_audio_default
+    hal_fingerprint_default
+    mediacodec
+    vendor_hal_poweroptservice_qti
+}:file { getattr open read };
