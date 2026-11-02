@@ -18,6 +18,7 @@
 #include <android/binder_status.h>
 
 #include <bitset>
+#include <cstdio>
 #include <fcntl.h>
 #include <poll.h>
 #include <sys/ioctl.h>
@@ -137,6 +138,16 @@ class FlouriteUdfpsHandler : public UdfpsHandler {
   public:
     void init(fingerprint_device_t* device) {
         mDevice = device;
+        const std::string location = android::base::GetProperty(
+                "persist.vendor.fingerprint.sensor_location", "");
+        int x = 0, y = 0, radius = 0;
+        if (std::sscanf(location.c_str(), "%d|%d|%d", &x, &y, &radius) == 3 &&
+            x > 0 && y > 0 && radius > 0) {
+            sensor_x_ = x;
+            sensor_y_ = y;
+        } else {
+            LOG(ERROR) << "invalid fingerprint sensor location: " << location;
+        }
         disp_fd_ = android::base::unique_fd(open(DISP_FEATURE_PATH, O_RDWR));
         touch_fd_ = android::base::unique_fd(open(TOUCH_DEV_PATH, O_RDWR));
         if (disp_fd_ < 0) {
@@ -214,6 +225,16 @@ class FlouriteUdfpsHandler : public UdfpsHandler {
 
     void onFingerDown(uint32_t x, uint32_t y, float /*minor*/, float /*major*/) {
         if (mAuthSuccess) return;
+        // The standard Xiaomi sensor uses (0, 0) for state-only FOD events.
+        // Goodix still needs the sensor coordinates for screen-off capture.
+        if (x == 0 && y == 0) {
+            if (sensor_x_ == 0 || sensor_y_ == 0) {
+                LOG(ERROR) << "cannot resolve state-only FOD event without sensor location";
+                return;
+            }
+            x = sensor_x_;
+            y = sensor_y_;
+        }
         LOG(DEBUG) << __func__ << "x: " << x << ", y: " << y;
 
         mDevice->extCmd(mDevice, COMMAND_FOD_PRESS_X, x);
@@ -392,6 +413,8 @@ class FlouriteUdfpsHandler : public UdfpsHandler {
     }
 
     fingerprint_device_t* mDevice;
+    uint32_t sensor_x_ = 0;
+    uint32_t sensor_y_ = 0;
     android::base::unique_fd disp_fd_;
     android::base::unique_fd touch_fd_;
     std::mutex touch_feature_lock_;
