@@ -1,0 +1,8 @@
+# SPDX-License-Identifier: Apache-2.0
+vendor_internal_prop(vendor_flourite_zram_config_prop)
+vendor_public_prop(vendor_flourite_zram_status_prop)
+get_prop(flourite_parts_app, vendor_flourite_zram_status_prop)
+get_prop(vendor_qti_init_shell, vendor_flourite_zram_config_prop)
+set_prop(vendor_qti_init_shell, vendor_flourite_zram_status_prop)
+neverallow { domain -init } vendor_flourite_zram_config_prop:property_service set;
+neverallow { domain -init -vendor_qti_init_shell } vendor_flourite_zram_status_prop:property_service set;

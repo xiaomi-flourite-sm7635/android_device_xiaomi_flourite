@@ -1,0 +1,15 @@
+# SPDX-License-Identifier: Apache-2.0
+# The original memory-boot runs at on init, before persisted preferences exist.
+# Keep its early tuning, but configure swap only here, once per normal boot.
+on property:ro.persistent_properties.ready=true
+    setprop vendor.flouriteparts.zram_request ${persist.sys.flouriteparts.zram_profile:-default}
+    setprop vendor.flouriteparts.zram_mmd ${mmd.zram.enabled:-false}
+    start vendor.flourite-zram
+
+service vendor.flourite-zram /vendor/bin/sh /vendor/bin/init.kernel.post_boot-memory.sh --zram
+    class core
+    user root
+    group root
+    seclabel u:r:vendor_qti_init_shell:s0
+    disabled
+    oneshot

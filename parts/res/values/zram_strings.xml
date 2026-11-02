@@ -1,0 +1,9 @@
+<resources>
+    <string name="zram_size_title">ZRAM size</string>
+    <string name="zram_default">Device default</string>
+    <string name="zram_percent">%1$d%% of usable RAM</string>
+    <string name="zram_info">Changes apply after a restart. ZRAM uses compressed RAM, not extra physical memory. The device default is unchanged (up to 6 GiB).</string>
+    <string name="zram_pending">Saved for the next restart. The current ZRAM remains unchanged until then.</string>
+    <string name="zram_failed">Could not save the ZRAM setting. The current swap was not changed.</string>
+    <string name="zram_unavailable">ZRAM configuration is unavailable on this boot. No live swap will be reset.</string>
+</resources>

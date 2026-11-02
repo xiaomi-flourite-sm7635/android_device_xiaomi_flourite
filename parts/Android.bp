@@ -33,6 +33,7 @@ android_app {
         "privapp-permissions-org.lineageos.settings.flourite.xml",
         "init.flourite_parts.rc",
         "init.flourite_parts_network.rc",
+        "init.flourite_parts_memory.rc",
     ],
 }
 
@@ -53,6 +54,13 @@ prebuilt_etc {
 prebuilt_etc {
     name: "init.flourite_parts_network.rc",
     src: "init.flourite_parts_network.rc",
+    sub_dir: "init",
+    system_ext_specific: true,
+}
+
+prebuilt_etc {
+    name: "init.flourite_parts_memory.rc",
+    src: "init.flourite_parts_memory.rc",
     sub_dir: "init",
     system_ext_specific: true,
 }

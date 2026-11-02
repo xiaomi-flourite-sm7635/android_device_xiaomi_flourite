@@ -1,0 +1,9 @@
+<resources>
+    <string name="zram_size_title">Dimensione ZRAM</string>
+    <string name="zram_default">Predefinita del dispositivo</string>
+    <string name="zram_percent">%1$d%% della RAM utilizzabile</string>
+    <string name="zram_info">Le modifiche si applicano al riavvio. La ZRAM usa RAM compressa, non memoria fisica aggiuntiva. Il valore predefinito rimane invariato (fino a 6 GiB).</string>
+    <string name="zram_pending">Scelta salvata per il prossimo riavvio. La ZRAM attuale rimane invariata fino ad allora.</string>
+    <string name="zram_failed">Impossibile salvare la configurazione ZRAM. La swap attuale non è stata modificata.</string>
+    <string name="zram_unavailable">Configurazione ZRAM non disponibile in questo avvio. La swap in uso non verrà azzerata.</string>
+</resources>

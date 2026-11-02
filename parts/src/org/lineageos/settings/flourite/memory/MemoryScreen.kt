@@ -184,6 +184,7 @@ fun MemoryScreen(onBack: () -> Unit) {
                     )
                 }
             }
+            item("zram_settings") { ZramSettingsCard(resumed) }
             item("apps") {
                 PartsPreferenceGroup(title = stringResource(R.string.memory_background_apps)) {
                     PartsPreference(

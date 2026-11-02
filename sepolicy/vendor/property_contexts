@@ -192,3 +192,7 @@ persist.vendor.radio.imei u:object_r:vendor_deviceid_prop:s0
 # Thermal
 vendor.sys.thermal.data.path u:object_r:vendor_thermal_normal_prop:s0
 vendor.tms.nfc. u:object_r:vendor_tms_nfc_prop:s0 prefix
+# Xiaomi Parts: saved request versus boot-confirmed ZRAM configuration.
+vendor.flouriteparts.zram_request u:object_r:vendor_flourite_zram_config_prop:s0 exact enum default v1_25 v1_50 v1_75
+vendor.flouriteparts.zram_profile u:object_r:vendor_flourite_zram_status_prop:s0 exact enum default v1_25 v1_50 v1_75 unavailable
+vendor.flouriteparts.zram_mmd u:object_r:vendor_flourite_zram_config_prop:s0 exact bool

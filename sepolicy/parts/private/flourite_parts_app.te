@@ -22,3 +22,8 @@ allow flourite_parts_app system_app_data_file:dir create_dir_perms;
 allow flourite_parts_app system_app_data_file:{ file lnk_file } create_file_perms;
 r_dir_file(flourite_parts_app, sysfs_zram)
 r_dir_file(flourite_parts_app, sysfs_devices_system_cpu)
+
+# Only init passes the saved ZRAM choice to vendor at the next boot.
+system_internal_prop(flouriteparts_zram_request_prop)
+set_prop(flourite_parts_app, flouriteparts_zram_request_prop)
+neverallow { domain -init -flourite_parts_app } flouriteparts_zram_request_prop:property_service set;

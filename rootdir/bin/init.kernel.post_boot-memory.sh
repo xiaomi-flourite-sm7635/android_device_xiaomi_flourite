@@ -31,8 +31,13 @@
 #=============================================================================
 function configure_zram_parameters()
 {
-	MemTotalStr=`cat /proc/meminfo | grep MemTotal`
-	MemTotal=${MemTotalStr:16:8}
+	# Run once after persistent properties load. Never resize or reset live swap.
+	setprop vendor.flouriteparts.zram_profile unavailable
+	case "$(getprop vendor.flouriteparts.zram_mmd)" in false|0) ;; *) return 1 ;; esac
+	[ "$(cat /sys/block/zram0/disksize 2>/dev/null)" = "0" ] || return 1
+	MemTotal=$(awk '/^MemTotal:/ {print $2}' /proc/meminfo)
+	case "$MemTotal" in ''|*[!0-9]*) return 1 ;; esac
+	[ "$MemTotal" -gt 0 ] || return 1
 
 	low_ram=`getprop ro.config.low_ram`
 
@@ -46,6 +51,14 @@ function configure_zram_parameters()
 	if [ $zRamSizeMB -gt 6144 ]; then
 		let zRamSizeMB=6144
 	fi
+	profile=$(getprop vendor.flouriteparts.zram_request)
+	case "$profile" in
+		v1_25) zRamSizeMB=$((MemTotal * 25 / 100 / 1024)) ;;
+		v1_50) zRamSizeMB=$((MemTotal * 50 / 100 / 1024)) ;;
+		v1_75) zRamSizeMB=$((MemTotal * 75 / 100 / 1024)) ;;
+		*) profile=default ;;
+	esac
+	[ "$zRamSizeMB" -gt 0 ] || return 1
 
 	# And enable lz4 zram compression for Go targets.
 	if [ "$low_ram" == "true" ]; then
@@ -56,7 +69,7 @@ function configure_zram_parameters()
 		if [ -f /sys/block/zram0/use_dedup ]; then
 			echo 1 > /sys/block/zram0/use_dedup
 		fi
-		echo "$zRamSizeMB""$diskSizeUnit" > /sys/block/zram0/disksize
+		echo "$zRamSizeMB""$diskSizeUnit" > /sys/block/zram0/disksize || return 1
 
 		# ZRAM may use more memory than it saves if SLAB_STORE_USER
 		# debug option is enabled.
@@ -67,8 +80,9 @@ function configure_zram_parameters()
 			echo 0 > /sys/kernel/slab/zspage/store_user
 		fi
 
-		mkswap /dev/block/zram0
-		swapon /dev/block/zram0 -p 32758
+		mkswap /dev/block/zram0 || return 1
+		swapon /dev/block/zram0 -p 32758 || return 1
+		setprop vendor.flouriteparts.zram_profile "$profile"
 	fi
 }
 
@@ -136,7 +150,7 @@ function configure_memory_parameters() {
 	# Set allocstall_threshold to 0 for all targets.
 	#
 
-	configure_zram_parameters
+	# ZRAM is configured separately once the saved profile is available.
 	configure_read_ahead_kb_values
 
 	# MIUI ADD: Performance_MemoryEnhance
@@ -199,4 +213,7 @@ function configure_memory_parameters() {
 	fi
 }
 
-configure_memory_parameters
+case "$1" in
+	--zram) configure_zram_parameters ;;
+	*) configure_memory_parameters ;;
+esac
