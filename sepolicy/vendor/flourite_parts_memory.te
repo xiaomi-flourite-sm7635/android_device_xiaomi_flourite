@@ -4,5 +4,7 @@ vendor_public_prop(vendor_flourite_zram_status_prop)
 get_prop(flourite_parts_app, vendor_flourite_zram_status_prop)
 get_prop(vendor_qti_init_shell, vendor_flourite_zram_config_prop)
 set_prop(vendor_qti_init_shell, vendor_flourite_zram_status_prop)
-neverallow { domain -init } vendor_flourite_zram_config_prop:property_service set;
-neverallow { domain -init -vendor_qti_init_shell } vendor_flourite_zram_status_prop:property_service set;
+# Recovery permits vendor_init to set vendor properties through the platform policy.
+# Keep normal-boot writers restricted to init and the ZRAM service.
+neverallow { domain -init recovery_only(`-vendor_init') } vendor_flourite_zram_config_prop:property_service set;
+neverallow { domain -init -vendor_qti_init_shell recovery_only(`-vendor_init') } vendor_flourite_zram_status_prop:property_service set;
