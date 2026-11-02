@@ -4,9 +4,11 @@
 import hashlib
 import json
 from pathlib import Path
+from tempfile import TemporaryDirectory
 
 from extract_utils.main import ExtractUtils
 from extract_utils.source import DiskSource, Source
+from modem_sources import ModemSource
 
 
 class VariantSource(Source):
@@ -27,7 +29,7 @@ class VariantSource(Source):
         return source._copy_file_path(file_path, target_file_path)
 
     def _copy_firmware(self, file, target_file_path):
-        # Never replace Global modem, bootloader or trusted firmware with CN.
+        # Listed firmware stays Global; region-specific modem images are excluded.
         return self.base._copy_firmware(file, target_file_path)
 
     def _list_sub_path_file_rel_paths(self, sub_path):
@@ -39,12 +41,17 @@ class VariantSource(Source):
 
 class FlouriteExtractUtils(ExtractUtils):
     china_source = None
+    modem_images = {}
 
     def process_modules(self, source):
+        manifest = json.loads(Path(__file__).with_name('firmware-sources.json').read_text())
         if self.china_source is not None:
-            manifest = json.loads(Path(__file__).with_name('firmware-sources.json').read_text())
             source = VariantSource(source, self.china_source, manifest['china_files'])
-        copied = super().process_modules(source)
+        # Resolve and verify both variants before extract-utils cleans vendor.
+        with TemporaryDirectory(prefix='flourite-modem-') as work_dir:
+            source = ModemSource(source, self.china_source, self.modem_images,
+                                 manifest['modem_images'], work_dir)
+            copied = super().process_modules(source)
         if not copied:
             raise RuntimeError('Incomplete flourite extraction; vendor was not regenerated')
         return copied

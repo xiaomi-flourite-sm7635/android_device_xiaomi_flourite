@@ -15,18 +15,31 @@ Extract proprietary files into `vendor/xiaomi/flourite` using `extract-files.py`
 Camera blob corrections are applied during extraction.
 
 Use extracted stock **OS3.0.306.0.WPRMIXM** as the base and
-**OS3.0.318.0.WPRCNXM** for the CN camera/NFC additions:
+**OS3.0.318.0.WPRCNXM** for the CN camera/NFC additions and radio firmware:
 
 ```sh
 PYTHONPATH=tools/extract-utils python3 device/xiaomi/flourite/extract-files.py /path/to/global-dump \
-    --china-source /path/to/china-dump
+    --china-source /path/to/china-dump \
+    --global-modem /path/to/global/modem.img --china-modem /path/to/china/modem.img
 ```
 
 `firmware-sources.json` pins the CN additions by SHA-256. Only those paths
-come from CN; shared camera libraries and radio images stay on the Global
-base. Keep both original dumps separate. A Global-only dump is insufficient
+come from CN; shared camera libraries and other bundled firmware stay on the
+Global base. Keep both original dumps separate. A Global-only dump is insufficient
 for a clean unified extraction. Apply compatibility patch 0006 before building
 so StrongBox is declared only for the NXP variants.
+
+Both stock modem images are verified against `firmware-sources.json` and packaged
+in vendor. Extraction restores their omitted free FAT tail in temporary copies.
+The explicit modem arguments can be omitted when `modem.img` is present in each
+dump, or both packaged images are available in a unified ROM dump.
+
+Android mounts the image selected by the hardware-derived vendor SKU read-only
+at `/vendor/firmware_mnt`, before starting the radio. MBN profiles come from that
+same image, not a previous region's MBN OTA cache. Firmware follows the active
+vendor slot and is updated or rolled back with the ROM; modem partitions are
+not flashed. Recovery retains its existing partition-based firmware mount.
+When updating the stock base, refresh both image pins and rebuild vendor.
 
 ```sh
 source build/envsetup.sh

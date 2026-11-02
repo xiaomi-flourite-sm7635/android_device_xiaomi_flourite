@@ -1,6 +1,20 @@
 {
     "base": "OS3.0.306.0.WPRMIXM",
     "china": "OS3.0.318.0.WPRCNXM",
+    "modem_images": {
+        "flourite_global": {
+            "release": "OS3.0.306.0.WPRMIXM",
+            "size": 252620800,
+            "filesystem_size": 367001600,
+            "sha256": "a8c61ee953834d635cbe28be6b43173e5459d17deaad15f1e63e7dcd11cfd4dc"
+        },
+        "flourite_cn": {
+            "release": "OS3.0.318.0.WPRCNXM",
+            "size": 236826624,
+            "filesystem_size": 367001600,
+            "sha256": "8d69189c6f17bdd623431d3b228105b0534be894b5dba29404d563becbb61046"
+        }
+    },
     "china_files": {
         "vendor/lib64/7816-3-T1.so": "c12f28b9d29a9b4cd63e05a16b3fb03c962398932a69fdd2cf6c281bbc1b11be",
         "odm/lib64/camera/com.qti.sensormodule.flourite_aac_ov08f10_ultra_ii.cn.bin": "5d7bf040d0ff07c140fce5dd1681e233b4412fd33201624a3d48ae3c33deaf47",

@@ -6,6 +6,12 @@
 ## Regenerate with tools/generate-proprietary-files.py and prune only
 ## after a successful build plus on-device hardware validation.
 
+# Regional modem images
+vendor/etc/modem/flourite_cn.img
+vendor/etc/modem/flourite_cn.version
+vendor/etc/modem/flourite_global.img
+vendor/etc/modem/flourite_global.version
+
 # China variant
 vendor/lib64/7816-3-T1.so
 odm/lib64/camera/com.qti.sensormodule.flourite_aac_ov08f10_ultra_ii.cn.bin
@@ -1761,10 +1767,6 @@ odm/lib64/vendor.xiaomi.hardware.misauth-V1-ndk_platform.so
 odm/lib64/vendor.xiaomi.hardware.mpayjoyca-V1-ndk_platform.so
 odm/lib64/vendor.xiaomi.hardware.mrm-V1-ndk_platform.so
 odm/lib64/vendor.xiaomi.hardware.otrpagent@2.0-impl.so
-
-# MBN OTA
-vendor/bin/mbnota
-vendor/etc/init/vendor.mbnota.rc
 
 # Vendor
 vendor/apex/com.google.android.widevine.nonupdatable.apex

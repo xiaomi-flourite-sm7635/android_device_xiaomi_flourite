@@ -1,4 +1,5 @@
 ## Firmware images from flourite OS3.0.306.0.WPRMIXM.
+## Regional modem images are packaged in vendor, not flashed to modem slots.
 
 abl.img;AB
 aop.img;AB
@@ -13,7 +14,6 @@ featenabler.img;AB
 hyp.img;AB
 imagefv.img;AB
 keymaster.img;AB
-modem.img;AB
 qupfw.img;AB
 shrm.img;AB
 tz.img;AB

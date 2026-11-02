@@ -328,8 +328,14 @@ module = ExtractUtilsModule(
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(add_help=False)
     parser.add_argument('--china-source', help='Extracted OS3.0.318.0.WPRCNXM stock directory')
+    parser.add_argument('--global-modem', help='Stock OS3.0.306.0.WPRMIXM modem.img')
+    parser.add_argument('--china-modem', help='Stock OS3.0.318.0.WPRCNXM modem.img')
     variant_args, remaining = parser.parse_known_args()
     sys.argv[1:] = remaining
     utils = FlouriteExtractUtils.device(module)
     utils.china_source = variant_args.china_source
+    utils.modem_images = {
+        'flourite_global': variant_args.global_modem,
+        'flourite_cn': variant_args.china_modem,
+    }
     utils.run()

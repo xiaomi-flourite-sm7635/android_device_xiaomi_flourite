@@ -430,84 +430,34 @@ esac
 # Make modem config folder and copy firmware config to that folder for RIL
 #
 
-# wait for mbnota process finished, Max wait time 0.5 * 20 seconds
+# Keep MBNs paired with the active vendor image, including after an OTA rollback.
+# Do not reuse /data/vendor/mbnconfig: it can belong to another hardware region.
+mbn_source=/vendor/firmware_mnt/image/modem_pr
+mbn_variant=$(getprop ro.boot.product.vendor.sku)
+case "$mbn_variant" in
+    flourite_cn|flourite_global) ;;
+    *) log -p e -t init.qcom.sh "Unknown modem variant"; exit 1 ;;
+esac
+mbn_version=/vendor/etc/modem/$mbn_variant.version
+if [ ! -r "$mbn_version" ] || [ ! -r "$mbn_source/mcfg/configs/mcfg_sw/mbn_sw.txt" ] ||
+        [ ! -r "$mbn_source/mcfg/configs/mcfg_hw/mbn_hw.txt" ]; then
+    log -p e -t init.qcom.sh "Regional modem firmware unavailable; not publishing MBN readiness"
+    exit 1
+fi
 
-retry_time=0
-while [ "$retry_time" -lt 20 ]
-do
-    log -p i -t "init.qcom.sh" "retry_time is $retry_time"
-    MBNOTAPID=`getprop init.svc.vendor.mbnota`
-    log -p i -t "init.qcom.sh" "MBNOTAPID is $MBNOTAPID"
-    if [ "$MBNOTAPID" == "running" ]; then
-        log -p i -t "init.qcom.sh" "process is exist"
-        let retry_time++
-        sleep 0.5
-        continue
-    else
-        log -p i -t "init.qcom.sh" "process is not exist"
-        break
+if ! cmp -s "$mbn_version" /data/vendor/modem_config/.flourite_firmware_version; then
+    # Only this generated MBN cache is replaced; modem NV/calibration is untouched.
+    chmod g+w -R /data/vendor/modem_config
+    rm -f /data/vendor/modem_config/.flourite_firmware_version || exit 1
+    rm -rf /data/vendor/modem_config/* || exit 1
+    cp --preserve=m -dr "$mbn_source/mcfg/configs/." /data/vendor/modem_config/ || exit 1
+    if [ -r "$mbn_source/mbn_ota.txt" ]; then
+        cp --preserve=m -d "$mbn_source/mbn_ota.txt" /data/vendor/modem_config/ || exit 1
     fi
-done
-
-
-if [ -f /data/vendor/mbnconfig/image/modem_pr/mcfg/configs/mbn_build_utc.txt ]; then
-    # for mbnota design
-    if [ -f /data/vendor/modem_config/mbn_build_utc.txt ]; then
-        prev_version_info=`cat /data/vendor/modem_config/mbn_build_utc.txt`
-    else
-        prev_version_info=""
-    fi
-
-    cur_version_info=`cat /data/vendor/mbnconfig/image/modem_pr/mcfg/configs/mbn_build_utc.txt`
-    if [ "$prev_version_info" != "$cur_version_info" ]; then
-        # add W for group recursively before delete
-        chmod g+w -R /data/vendor/modem_config/*
-        rm -rf /data/vendor/modem_config/*
-        # preserve the read only mode for all subdir and files
-        log -p i -t "init.qcom.sh" "copy start"
-        cp --preserve=m -dr /data/vendor/mbnconfig/image/modem_pr/mcfg/configs/* /data/vendor/modem_config
-        cp --preserve=m -d /data/vendor/mbnconfig/image/modem_pr/mbn_ota.txt /data/vendor/modem_config/
-        # the group must be root, otherwise this script could not add "W" for group recursively
-        chown -hR radio.root /data/vendor/modem_config/*
-        log -p i -t "init.qcom.sh" "copy end"
-    fi
-else
-    # for legacy design
-    if [ -f /data/vendor/modem_config/ver_info.txt ]; then
-        prev_version_info=`cat /data/vendor/modem_config/ver_info.txt`
-    else
-        prev_version_info=""
-    fi
-
-    #add judge for modem decoupling or not
-    modem_decouple="/vendor/modem_firmware"
-    if [ -d "$modem_decouple" ] && [-n "$(ls -A "$modem_decouple")"]; then
-        cur_version_info=`cat /vendor/modem_firmware/verinfo/ver_info.txt`
-        if [ ! -f /vendor/modem_firmware/verinfo/ver_info.txt -o "$prev_version_info" != "$cur_version_info" ]; then
-           # add W for group recursively before delete
-           chmod g+w -R /data/vendor/modem_config/*
-           rm -rf /data/vendor/modem_config/*
-           # preserve the read only mode for all subdir and files
-           cp --preserve=m -dr /vendor/modem_firmware/image/modem_pr/mcfg/configs/* /data/vendor/modem_config
-           cp --preserve=m -d /vendor/modem_firmware/verinfo/ver_info.txt /data/vendor/modem_config/
-           cp --preserve=m -d /vendor/modem_firmware/image/modem_pr/mbn_ota.txt /data/vendor/modem_config/
-           # the group must be root, otherwise this script could not add "W" for group recursively
-           chown -hR radio.root /data/vendor/modem_config/*
-        fi
-    else
-        cur_version_info=`cat /vendor/firmware_mnt/verinfo/ver_info.txt`
-        if [ ! -f /vendor/firmware_mnt/verinfo/ver_info.txt -o "$prev_version_info" != "$cur_version_info" ]; then
-           # add W for group recursively before delete
-           chmod g+w -R /data/vendor/modem_config/*
-           rm -rf /data/vendor/modem_config/*
-           # preserve the read only mode for all subdir and files
-           cp --preserve=m -dr /vendor/firmware_mnt/image/modem_pr/mcfg/configs/* /data/vendor/modem_config
-           cp --preserve=m -d /vendor/firmware_mnt/verinfo/ver_info.txt /data/vendor/modem_config/
-           cp --preserve=m -d /vendor/firmware_mnt/image/modem_pr/mbn_ota.txt /data/vendor/modem_config/
-           # the group must be root, otherwise this script could not add "W" for group recursively
-           chown -hR radio.root /data/vendor/modem_config/*
-        fi
-    fi
+    chown -hR radio.root /data/vendor/modem_config/* || exit 1
+    # Publish the version last so an interrupted copy is retried at next boot.
+    cp --preserve=m -d "$mbn_version" /data/vendor/modem_config/.flourite_firmware_version || exit 1
+    chown radio.root /data/vendor/modem_config/.flourite_firmware_version || exit 1
 fi
 chmod g-w /data/vendor/modem_config
 setprop ro.vendor.ril.mbn_copy_completed 1

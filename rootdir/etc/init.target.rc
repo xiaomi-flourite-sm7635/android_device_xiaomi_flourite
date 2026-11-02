@@ -97,6 +97,8 @@ on early-fs
     start vold
 
 on fs
+    # Provide the selected firmware before starting radio/DSP services.
+    mount vfat loop@/vendor/etc/modem/${ro.boot.product.vendor.sku}.img /vendor/firmware_mnt ro nosuid nodev noexec shortname=lower,uid=1000,gid=1000,dmask=227,fmask=337,context=u:object_r:firmware_file:s0
     start hwservicemanager
     mount_all /vendor/etc/fstab.qcom --early
     chown root system /mnt/vendor/persist
@@ -400,7 +402,7 @@ on property:ro.miui.singlesim=0
 
 on init && property:ro.boot.mode=charger
     wait_for_prop vendor.all.modules.ready 1
-    mount_all /vendor/etc/charger_fw_fstab.qti --early
+    mount vfat loop@/vendor/etc/modem/${ro.boot.product.vendor.sku}.img /vendor/firmware_mnt ro nosuid nodev noexec shortname=lower,uid=1000,gid=1000,dmask=227,fmask=337,context=u:object_r:firmware_file:s0
     start vendor.pd_mapper
     wait /sys/kernel/boot_adsp/boot
     write /sys/kernel/boot_adsp/boot 1
