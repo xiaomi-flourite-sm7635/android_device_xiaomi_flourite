@@ -10,7 +10,7 @@
     <string name="charge_pause_pending">Ripristino in attesa — ricarica normale non confermata. Lascia collegato il caricatore e riprova il ripristino.</string>
     <string name="charge_pause_unavailable">Controllo non disponibile. Servono kernel e permessi della ROM aggiornati; uno stato illeggibile non significa disattivato.</string>
     <string name="charge_pause_busy">Verifica del controller di ricarica…</string>
-    <string name="charge_pause_failed">Operazione non confermata. Controlla lo stato sopra. Per attivare, collega un caricatore con batteria al 30–95%, temperatura a 20–40 °C e stato buono. Il firmware potrebbe non supportare la pausa.</string>
+    <string name="charge_pause_failed">Operazione non confermata. Collega un caricatore USB e controlla lo stato attuale. Il firmware deve confermare il limite di corrente; le sue protezioni della batteria restano attive.</string>
     <string name="charge_pause_restore">Ripristina ricarica normale</string>
     <string name="charge_pause_enable">Prova pausa ricarica</string>
     <string name="battery_title">Batteria</string>

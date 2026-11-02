@@ -10,7 +10,7 @@
     <string name="charge_pause_pending">Restoration pending — normal charging is not confirmed. Keep the charger connected and retry restoring.</string>
     <string name="charge_pause_unavailable">Control unavailable. Requires the matching kernel and ROM permissions; an unreadable state does not mean off.</string>
     <string name="charge_pause_busy">Checking the charging controller…</string>
-    <string name="charge_pause_failed">The operation could not be confirmed. Check the state above. To enable, connect a charger with battery at 30–95%, temperature at 20–40 °C and health reported as good. The firmware may not support pausing.</string>
+    <string name="charge_pause_failed">The operation could not be confirmed. Connect a USB charger and check the current state. The firmware must confirm the charging-current limit; its battery protections remain enabled.</string>
     <string name="charge_pause_restore">Restore normal charging</string>
     <string name="charge_pause_enable">Try charging pause</string>
     <string name="battery_title">Battery</string>
