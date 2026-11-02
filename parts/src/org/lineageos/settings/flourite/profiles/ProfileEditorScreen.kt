@@ -157,7 +157,7 @@ private fun ProfileRangeControls(key: String, draft: AppPerformanceProfile, tabl
                 Text("${table[lower] / 1000.0} MHz", style = MaterialTheme.typography.titleMedium)
                 Text(stringResource(R.string.gpu_maximum_frequency), style = MaterialTheme.typography.labelLarge)
                 Text("${table[upper] / 1000.0} MHz", style = MaterialTheme.typography.titleMedium)
-                if (table.size > 1) RangeSlider(
+                if (table.size > 1) PartsFrequencyRangeSlider(
                     value = selection,
                     onValueChange = { selection = it },
                     onValueChangeFinished = {
@@ -165,8 +165,7 @@ private fun ProfileRangeControls(key: String, draft: AppPerformanceProfile, tabl
                         val max = selection.endInclusive.roundToInt().coerceIn(min, table.lastIndex)
                         edit(key, "${table[min]} ${table[max]}")
                     },
-                    valueRange = 0f..table.lastIndex.toFloat(),
-                    steps = (table.size - 2).coerceAtLeast(0),
+                    lastIndex = table.lastIndex,
                     enabled = enabled,
                 )
             }

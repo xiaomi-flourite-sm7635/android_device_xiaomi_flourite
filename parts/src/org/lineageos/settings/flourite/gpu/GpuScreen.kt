@@ -22,7 +22,7 @@ import androidx.compose.material.icons.filled.Warning
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.RangeSlider
+import org.lineageos.settings.flourite.ui.PartsFrequencyRangeSlider
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
@@ -301,11 +301,10 @@ private fun GpuRangeDialog(gpu: GpuState, onDismiss: () -> Unit, onApply: (Long,
                                 style = MaterialTheme.typography.labelLarge)
                             Text(frequencyText(frequencies[upper]), style = MaterialTheme.typography.titleMedium)
                             if (frequencies.size > 1) {
-                                RangeSlider(
+                                PartsFrequencyRangeSlider(
                                     value = range,
                                     onValueChange = { range = it },
-                                    valueRange = 0f..frequencies.lastIndex.toFloat(),
-                                    steps = (frequencies.size - 2).coerceAtLeast(0),
+                                    lastIndex = frequencies.lastIndex,
                                 )
                             }
                         }

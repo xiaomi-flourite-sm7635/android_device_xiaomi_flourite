@@ -23,7 +23,7 @@ import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.RangeSlider
+import org.lineageos.settings.flourite.ui.PartsFrequencyRangeSlider
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
@@ -278,11 +278,10 @@ private fun FrequencyRangeDialog(
                 Text(stringResource(R.string.cpu_range_value, frequencyText(frequencies[lower]), frequencyText(frequencies[upper])),
                     style = MaterialTheme.typography.titleMedium)
                 if (frequencies.size > 1) {
-                    RangeSlider(
+                    PartsFrequencyRangeSlider(
                         value = range,
                         onValueChange = { range = it },
-                        valueRange = 0f..frequencies.lastIndex.toFloat(),
-                        steps = (frequencies.size - 2).coerceAtLeast(0),
+                        lastIndex = frequencies.lastIndex,
                     )
                 }
                 Text(stringResource(if (policy.lockSupported) R.string.flourite_cpu_limits_info else R.string.flourite_cpu_kernel_required),
