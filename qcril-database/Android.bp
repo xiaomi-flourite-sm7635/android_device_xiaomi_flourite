@@ -8,6 +8,7 @@ filegroup {
     srcs: [
         "config/0015.1_config.sql",
         "config/0015.2_config.sql",
+        "config/0015.3_config.sql",
     ],
 }
 
@@ -35,5 +36,6 @@ prebuilt_etc {
     required: [
         "0015.1_config.sql",
         "0015.2_config.sql",
+        "0015.3_config.sql",
     ],
 }
