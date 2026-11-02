@@ -1,0 +1,5 @@
+<resources>
+    <string name="charge_pause_tile_on">Charging paused</string>
+    <string name="charge_pause_tile_off">Charging allowed</string>
+    <string name="charge_pause_tile_failed">Change not confirmed. Check bypass charging in Xiaomi Parts.</string>
+</resources>

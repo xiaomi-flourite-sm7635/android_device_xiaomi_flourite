@@ -42,6 +42,12 @@ internal class ChargePauseControl(
             failure?.let { it.message ?: it.javaClass.simpleName })
     }
 
+    @Synchronized fun toggle(): ChargePauseResult = when (val current = state()) {
+        ChargePauseState.OFF -> setEnabled(true)
+        ChargePauseState.ACTIVE, ChargePauseState.RESTORE_PENDING -> setEnabled(false)
+        ChargePauseState.UNAVAILABLE -> ChargePauseResult(current, false)
+    }
+
     companion object {
         private const val NODE = "/sys/class/qcom-battery/parts_charge_pause"
     }

@@ -50,6 +50,14 @@
             <property android:name="android.app.PROPERTY_SPECIAL_USE_FGS_SUBTYPE"
                 android:value="User-enabled foreground app performance profiles with automatic restoration" />
         </service>
+        <service android:name=".battery.ChargePauseTileService" android:exported="true"
+            android:permission="android.permission.BIND_QUICK_SETTINGS_TILE"
+            android:label="@string/charge_pause_title" android:icon="@drawable/ic_charge_pause">
+            <intent-filter>
+                <action android:name="android.service.quicksettings.action.QS_TILE" />
+            </intent-filter>
+            <meta-data android:name="android.service.quicksettings.TOGGLEABLE_TILE" android:value="true" />
+        </service>
         <receiver android:name=".profiles.ProfileBootReceiver" android:exported="false">
             <intent-filter>
                 <action android:name="android.intent.action.BOOT_COMPLETED" />
