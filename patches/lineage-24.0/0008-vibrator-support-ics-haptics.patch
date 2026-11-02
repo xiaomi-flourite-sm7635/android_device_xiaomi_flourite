@@ -1,0 +1,21 @@
+diff --git a/aidl/VibratorOL/Vibrator.cpp b/aidl/VibratorOL/Vibrator.cpp
+--- a/aidl/VibratorOL/Vibrator.cpp
++++ b/aidl/VibratorOL/Vibrator.cpp
+@@ -145,6 +145,7 @@
+                 && strcmp(name, "drv260x:haptics")
+                 && strcmp(name, "drv2624:haptics")
+                 && strcmp(name, "haptic_rt")
++                && strcmp(name, "ics_haptic")
+                 && strcmp(name, "si_haptic")) {
+             ALOGD("not a supported haptics device\n");
+             close(fd);
+diff --git a/excluded-input-devices.xml b/excluded-input-devices.xml
+--- a/excluded-input-devices.xml
++++ b/excluded-input-devices.xml
+@@ -36,5 +36,6 @@
+     <device name="drv260x:haptics"/>
+     <device name="drv2624:haptics"/>
+     <device name="haptic_rt"/>
++    <device name="ics_haptic"/>
+     <device name="si_haptic"/>
+ </devices>
