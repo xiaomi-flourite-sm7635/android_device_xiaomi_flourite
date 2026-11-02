@@ -35,7 +35,14 @@ function configure_zram_parameters()
 	setprop vendor.flouriteparts.zram_profile unavailable
 	case "$(getprop vendor.flouriteparts.zram_mmd)" in false|0) ;; *) return 1 ;; esac
 	[ "$(cat /sys/block/zram0/disksize 2>/dev/null)" = "0" ] || return 1
-	MemTotal=$(awk '/^MemTotal:/ {print $2}' /proc/meminfo)
+	# Use shell builtins; awk cannot execute in vendor_qti_init_shell.
+	MemTotal=
+	while read -r mem_key mem_value mem_unit; do
+		[ "$mem_key" = "MemTotal:" ] || continue
+		[ "$mem_unit" = "kB" ] || return 1
+		MemTotal=$mem_value
+		break
+	done < /proc/meminfo || return 1
 	case "$MemTotal" in ''|*[!0-9]*) return 1 ;; esac
 	[ "$MemTotal" -gt 0 ] || return 1
 
