@@ -2,6 +2,9 @@
 persist.vendor.audio.pa.smartpa_type u:object_r:vendor_audio_prop:s0
 vendor.audio.voice.receiver.status u:object_r:vendor_audio_prop:s0
 
+# Touch
+persist.vendor.hostprocess.filmstatus u:object_r:vendor_touch_film_prop:s0 exact int
+
 # Camera
 vendor.camera.sensor. u:object_r:vendor_camera_sensor_prop:s0
 persist.vendor.cameraid.totalnum u:object_r:vendor_camera_info_prop:s0 exact int

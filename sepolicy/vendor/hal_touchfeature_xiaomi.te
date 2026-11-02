@@ -26,3 +26,6 @@ allow hal_touchfeature_xiaomi_default sysfs_touch_suspend:file rw_file_perms;
 allow hal_touchfeature_xiaomi_default input_device:dir r_dir_perms;
 allow hal_touchfeature_xiaomi_default input_device:chr_file rw_file_perms;
 allow hal_touchfeature_xiaomi_default self:capability sys_nice;
+
+# Persist the film detection result from the host touch processor.
+set_prop(hal_touchfeature_xiaomi_default, vendor_touch_film_prop)
