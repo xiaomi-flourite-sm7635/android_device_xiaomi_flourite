@@ -5,13 +5,13 @@ package org.lineageos.settings.flourite.gpu
 
 import java.io.File
 
-internal enum class GpuMode { AUTOMATIC, RANGE, FIXED, UNKNOWN }
-internal enum class GpuFailure { UNAVAILABLE, UNSUPPORTED, INVALID_FREQUENCY, INVALID_RANGE, CONFLICT, WRITE_FAILED, READBACK_FAILED }
+internal enum class GpuMode { AUTOMATIC, RANGE, UNKNOWN }
+internal enum class GpuFailure { UNAVAILABLE, INVALID_FREQUENCY, INVALID_RANGE, WRITE_FAILED, READBACK_FAILED }
 internal data class GpuResult(val failure: GpuFailure? = null, val rollbackFailed: Boolean = false) {
     val successful get() = failure == null
 }
 internal data class GpuState(
-    val currentKHz: Long?, val frequenciesKHz: List<Long>, val fixedKHz: Long?,
+    val currentKHz: Long?, val frequenciesKHz: List<Long>,
     val requestedMinimumKHz: Long?, val requestedMaximumKHz: Long?,
     val effectiveMinimumKHz: Long?, val effectiveMaximumKHz: Long?,
     val controlMode: GpuMode, val readable: Boolean, val writable: Boolean,
@@ -34,7 +34,7 @@ internal class GpuControlManager(
         val effective = numbers("parts_effective_limits")?.takeIf { it.size == 2 && it[0] > 0 && it[0] <= it[1] }
         val current = numbers("gpuclk")?.singleOrNull()?.takeIf { it >= 0 }?.div(1000)
         val writable = raw != null && control.canWrite() && table.isNotEmpty()
-        return GpuState(current?.takeIf { it > 0 }, table, null,
+        return GpuState(current?.takeIf { it > 0 }, table,
             raw?.takeIf { it[0] == 1L }?.get(1)?.div(1000), raw?.takeIf { it[0] == 1L }?.get(2)?.div(1000),
             effective?.get(0)?.div(1000), effective?.get(1)?.div(1000),
             when (raw?.first()) { 0L -> GpuMode.AUTOMATIC; 1L -> GpuMode.RANGE; else -> GpuMode.UNKNOWN },

@@ -42,7 +42,7 @@ internal fun ProfileEditorScreen(appName: String, packageName: String, onBack: (
             runCatching {
                 synchronized(PerformanceLock) {
                     val initial = ProfileStore(context).profiles()[packageName] ?: ProfileRuntime.capture()
-                    ProfileEditorData(initial, CpuControlSession.read { it.readState() }, GpuControlSession.snapshot().state)
+                    ProfileEditorData(initial, CpuControlSession.read { it.readState() }, GpuControlSession.readState())
                 }
             }.getOrNull()
         }

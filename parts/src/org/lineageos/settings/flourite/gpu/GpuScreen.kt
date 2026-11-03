@@ -74,7 +74,7 @@ fun GpuScreen(onBack: () -> Unit) {
         while (isActive) {
             if (!busy) {
                 try {
-                    state = withContext(Dispatchers.IO) { GpuControlSession.snapshot().state }
+                    state = withContext(Dispatchers.IO) { GpuControlSession.readState() }
                     readFailed = false
                 } catch (cancelled: CancellationException) {
                     throw cancelled
@@ -95,7 +95,7 @@ fun GpuScreen(onBack: () -> Unit) {
         scope.launch {
             try {
                 result = withContext(Dispatchers.IO) { operation() }
-                state = withContext(Dispatchers.IO) { GpuControlSession.snapshot().state }
+                state = withContext(Dispatchers.IO) { GpuControlSession.readState() }
                 readFailed = false
             } catch (cancelled: CancellationException) {
                 throw cancelled
@@ -113,6 +113,12 @@ fun GpuScreen(onBack: () -> Unit) {
     val unavailable = stringResource(if (current == null && !readFailed) {
         R.string.gpu_loading
     } else R.string.gpu_unavailable)
+    val modeLabel = when (current?.controlMode) {
+        GpuMode.AUTOMATIC -> stringResource(R.string.gpu_mode_automatic)
+        GpuMode.RANGE -> stringResource(R.string.gpu_mode_range)
+        GpuMode.UNKNOWN -> stringResource(R.string.gpu_mode_unknown)
+        null -> unavailable
+    }
     PartsScaffold(title = stringResource(R.string.gpu_settings_title), onBack = onBack) { insets ->
         LazyColumn(
             modifier = Modifier.fillMaxSize(),
@@ -139,13 +145,7 @@ fun GpuScreen(onBack: () -> Unit) {
                     )
                     PartsMetricCard(
                         label = stringResource(R.string.gpu_control_state),
-                        value = when (current?.controlMode) {
-                            GpuMode.FIXED -> current.fixedKHz?.let { frequencyText(it) } ?: unavailable
-                            GpuMode.RANGE -> stringResource(R.string.gpu_mode_range)
-                            GpuMode.AUTOMATIC -> stringResource(R.string.gpu_mode_automatic)
-                            GpuMode.UNKNOWN -> stringResource(R.string.gpu_mode_unknown)
-                            null -> unavailable
-                        },
+                        value = modeLabel,
                         icon = Icons.Filled.Tune,
                         modifier = Modifier.weight(1f),
                     )
@@ -155,20 +155,13 @@ fun GpuScreen(onBack: () -> Unit) {
                 PartsPreferenceGroup {
                     PartsPreference(
                         title = stringResource(R.string.gpu_control_state),
-                        summary = when (current?.controlMode) {
-                            GpuMode.AUTOMATIC -> stringResource(R.string.gpu_mode_automatic)
-                            GpuMode.FIXED -> stringResource(R.string.gpu_mode_fixed)
-                            GpuMode.RANGE -> stringResource(R.string.gpu_mode_range)
-                            GpuMode.UNKNOWN -> stringResource(R.string.gpu_mode_unknown)
-                            null -> unavailable
-                        },
+                        summary = modeLabel,
                         icon = Icons.Filled.DeveloperBoard,
                     )
                     PartsPreference(
                         title = stringResource(R.string.gpu_requested_range),
                         summary = when (current?.controlMode) {
                             GpuMode.AUTOMATIC -> stringResource(R.string.gpu_mode_automatic)
-                            GpuMode.FIXED -> stringResource(R.string.gpu_mode_fixed)
                             GpuMode.RANGE -> rangeText(current.requestedMinimumKHz, current.requestedMaximumKHz)
                             else -> unavailable
                         },
@@ -192,7 +185,7 @@ fun GpuScreen(onBack: () -> Unit) {
                         title = stringResource(R.string.gpu_restore_automatic),
                         summary = stringResource(R.string.flourite_gpu_restore_summary),
                         icon = Icons.Filled.RestartAlt,
-                        // Recovery stays available independently of the OPP table and fixed mode.
+                        // Recovery stays available independently of the OPP table.
                         enabled = resumed && !busy && current?.canRestore == true,
                         onClick = { restoreDialog = true },
                     )
@@ -207,12 +200,6 @@ fun GpuScreen(onBack: () -> Unit) {
                         }),
                         icon = Icons.Filled.Warning,
                     )
-                }
-            }
-            if (current?.controlMode == GpuMode.FIXED) {
-                item("legacy_fixed") {
-                    PartsInfoCard(body = stringResource(R.string.gpu_legacy_fixed_summary),
-                        icon = Icons.Filled.Warning)
                 }
             }
             item("effective_explanation") {
@@ -276,8 +263,8 @@ private fun GpuRangeDialog(gpu: GpuState, onDismiss: () -> Unit, onApply: (Long,
     val frequencies = remember(gpu.frequenciesKHz) { gpu.frequenciesKHz.distinct().sorted() }
     if (frequencies.isEmpty()) return
     fun index(value: Long) = frequencies.indices.minByOrNull { abs(frequencies[it] - value) } ?: 0
-    val initialMin = gpu.requestedMinimumKHz ?: gpu.fixedKHz ?: frequencies.first()
-    val initialMax = gpu.requestedMaximumKHz ?: gpu.fixedKHz ?: frequencies.last()
+    val initialMin = gpu.requestedMinimumKHz ?: frequencies.first()
+    val initialMax = gpu.requestedMaximumKHz ?: frequencies.last()
     var range by remember(frequencies, initialMin, initialMax) {
         mutableStateOf(index(initialMin).toFloat()..index(initialMax).toFloat())
     }
@@ -347,10 +334,8 @@ private fun rangeText(minimum: Long?, maximum: Long?): String = if (minimum != n
 
 private fun failureLabel(failure: GpuFailure): Int = when (failure) {
     GpuFailure.UNAVAILABLE -> R.string.gpu_error_unavailable
-    GpuFailure.UNSUPPORTED -> R.string.gpu_error_unsupported
     GpuFailure.INVALID_FREQUENCY -> R.string.gpu_error_frequency
     GpuFailure.INVALID_RANGE -> R.string.gpu_error_range
-    GpuFailure.CONFLICT -> R.string.gpu_error_conflict
     GpuFailure.WRITE_FAILED -> R.string.gpu_error_write
     GpuFailure.READBACK_FAILED -> R.string.gpu_error_readback
 }
