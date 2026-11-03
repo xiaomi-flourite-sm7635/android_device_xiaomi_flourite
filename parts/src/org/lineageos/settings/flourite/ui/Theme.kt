@@ -5,13 +5,9 @@
 
 package org.lineageos.settings.flourite.ui
 
-import androidx.compose.animation.core.CubicBezierEasing
-import androidx.compose.animation.core.DurationBasedAnimationSpec
 import androidx.compose.animation.core.FiniteAnimationSpec
-import androidx.compose.animation.core.LinearEasing
 import androidx.compose.animation.core.Spring
 import androidx.compose.animation.core.spring
-import androidx.compose.animation.core.tween
 import androidx.compose.runtime.Composable
 import com.android.settingslib.spa.framework.theme.SettingsTheme
 
@@ -23,24 +19,8 @@ fun FlouritePartsTheme(content: @Composable () -> Unit) {
 
 /** Motion tokens for controls and live readings; page navigation follows Settings. */
 object Motion {
-    private val StandardEasing = CubicBezierEasing(0.2f, 0f, 0f, 1f)
-
     fun <T> defaultEffectsSpec(): FiniteAnimationSpec<T> = spring(
         dampingRatio = Spring.DampingRatioNoBouncy,
         stiffness = Spring.StiffnessMediumLow,
     )
-
-    fun <T> pressSpec(): FiniteAnimationSpec<T> = spring(
-        dampingRatio = Spring.DampingRatioNoBouncy,
-        stiffness = Spring.StiffnessMedium,
-    )
-
-    fun <T> liveValueSpec(): FiniteAnimationSpec<T> =
-        tween(durationMillis = 700, easing = StandardEasing)
-
-    fun <T> shimmerSpec(): DurationBasedAnimationSpec<T> =
-        tween(durationMillis = 2_800, easing = LinearEasing)
-
 }
-
-const val shimmerAlpha: Float = 0.05f
